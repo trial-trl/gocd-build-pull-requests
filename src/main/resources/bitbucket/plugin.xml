@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<go-plugin id="bitbucket.pr" version="1">
+    <about>
+        <name>Bitbucket Pull Requests Builder</name>
+        <version>${version}</version>
+        <target-go-version>15.1.0</target-go-version>
+        <description>Plugin that polls a Bitbucket repository for pull requests and triggers a build for each of them</description>
+        <vendor>
+            <name>Make and ship</name>
+            <url>https://www.makeandship.com</url>
+        </vendor>
+    </about>
+</go-plugin>

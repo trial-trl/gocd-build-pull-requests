@@ -8,6 +8,7 @@ Supported (as seperate plugins):
 * Github repository for Pull Requests
 * Stash repository for Pull Requests
 * Gerrit repository for Change Sets
+* Bitbucket repository for Pull Requests
 
 ## Migration from Git Feature Branch plugin 1.2.x to 1.3
 

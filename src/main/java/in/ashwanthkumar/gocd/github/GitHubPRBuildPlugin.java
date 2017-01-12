@@ -134,7 +134,7 @@ public class GitHubPRBuildPlugin implements GoPlugin {
         return new GoPluginIdentifier(EXTENSION_NAME, goSupportedVersions);
     }
 
-    void setProvider(Provider provider) {
+    public void setProvider(Provider provider) {
         this.provider = provider;
     }
 
@@ -203,7 +203,7 @@ public class GitHubPRBuildPlugin implements GoPlugin {
         return renderJSON(SUCCESS_RESPONSE_CODE, response);
     }
 
-    GoPluginApiResponse handleGetLatestRevision(GoPluginApiRequest goPluginApiRequest) {
+    public GoPluginApiResponse handleGetLatestRevision(GoPluginApiRequest goPluginApiRequest) {
         Map<String, Object> requestBodyMap = (Map<String, Object>) fromJSON(goPluginApiRequest.requestBody());
         Map<String, String> configuration = keyValuePairs(requestBodyMap, "scm-configuration");
         GitConfig gitConfig = getGitConfig(configuration);
@@ -230,7 +230,7 @@ public class GitHubPRBuildPlugin implements GoPlugin {
         }
     }
 
-    GoPluginApiResponse handleLatestRevisionSince(GoPluginApiRequest goPluginApiRequest) {
+    public GoPluginApiResponse handleLatestRevisionSince(GoPluginApiRequest goPluginApiRequest) {
         Map<String, Object> requestBodyMap = (Map<String, Object>) fromJSON(goPluginApiRequest.requestBody());
         Map<String, String> configuration = keyValuePairs(requestBodyMap, "scm-configuration");
         GitConfig gitConfig = getGitConfig(configuration);
@@ -342,7 +342,7 @@ public class GitHubPRBuildPlugin implements GoPlugin {
         }
     }
 
-    GitConfig getGitConfig(Map<String, String> configuration) {
+    public GitConfig getGitConfig(Map<String, String> configuration) {
         GitConfig gitConfig = new GitConfig(configuration.get("url"), configuration.get("username"), configuration.get("password"), null);
         provider.addConfigData(gitConfig);
         return gitConfig;
@@ -356,7 +356,7 @@ public class GitHubPRBuildPlugin implements GoPlugin {
         }
     }
 
-    Map<String, Object> getRevisionMap(GitConfig gitConfig, String branch, Revision revision) {
+    public Map<String, Object> getRevisionMap(GitConfig gitConfig, String branch, Revision revision) {
         Map<String, Object> response = new HashMap<String, Object>();
         response.put("revision", revision.getRevision());
         response.put("user", revision.getUser());
