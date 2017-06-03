@@ -41,9 +41,9 @@
             <version>1.68</version>
         </dependency>
         <dependency>
-      		<groupId>commons-httpclient</groupId>
-      		<artifactId>commons-httpclient</artifactId>
-      		<version>3.1</version>
+      		<groupId>org.apache.httpcomponents</groupId>
+		    <artifactId>httpclient</artifactId>
+		    <version>4.5</version>
     	</dependency>
     	<dependency>
       		<groupId>org.codehaus.jackson</groupId>
@@ -126,7 +126,7 @@
     </profiles>
 
     <build>
-        <finalName>${plugin.name}-${version}</finalName>
+        <finalName>${plugin.name}-${project.version}</finalName>
         <resources>
             <resource>
                 <directory>src/main/resources/views</directory>
@@ -137,8 +137,9 @@
                 <filtering>true</filtering>
             </resource>
         </resources>
-
-        <plugins>
+		
+		
+		<plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -184,5 +185,6 @@
                 </executions>
             </plugin>
         </plugins>
-    </build>
+		
+	</build>
 </project>

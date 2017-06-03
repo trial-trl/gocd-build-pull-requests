@@ -64,7 +64,7 @@ public class BitbucketProvider implements Provider {
     @Override
     public void checkConnection(GitConfig gitConfig) {
         try {
-        	ApiClient client = new ApiClient(gitConfig.getUsername(), gitConfig.getPassword(), "makeandship", "medicines", null);
+        	ApiClient client = new ApiClient(gitConfig.getUsername(), gitConfig.getPassword(), gitConfig.getUrl(), null);
         	client.checkConnection();
         } catch (Exception e) {
             throw new RuntimeException(String.format("check connection failed. %s", e.getMessage()), e);
@@ -83,7 +83,7 @@ public class BitbucketProvider implements Provider {
 
     @Override
     public void populateRevisionData(GitConfig gitConfig, String prId, String prSHA, Map<String, String> data) {
-    	ApiClient client = new ApiClient(gitConfig.getUsername(), gitConfig.getPassword(), "makeandship", "medicines", null);
+    	ApiClient client = new ApiClient(gitConfig.getUsername(), gitConfig.getPassword(), gitConfig.getUrl(), null);
     	
         data.put("PR_ID", prId);
         Pullrequest pr = null;

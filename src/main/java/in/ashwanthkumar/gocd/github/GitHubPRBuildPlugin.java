@@ -91,6 +91,7 @@ public class GitHubPRBuildPlugin implements GoPlugin {
 
     @Override
     public GoPluginApiResponse handle(GoPluginApiRequest goPluginApiRequest) {
+    	LOGGER.info("Start handling request");
         if (goPluginApiRequest.requestName().equals(REQUEST_SCM_CONFIGURATION)) {
             return handleSCMConfiguration();
         } else if (goPluginApiRequest.requestName().equals(REQUEST_SCM_VIEW)) {
@@ -400,6 +401,7 @@ public class GitHubPRBuildPlugin implements GoPlugin {
     }
 
     public void checkConnection(GitConfig gitConfig, Map<String, Object> response, List<String> messages) {
+    	LOGGER.info(String.format("Checking connection with URL: %s", gitConfig.getUrl()));
         if (StringUtil.isEmpty(gitConfig.getUrl())) {
             response.put("status", "failure");
             messages.add("URL is empty");
