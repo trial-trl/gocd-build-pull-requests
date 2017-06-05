@@ -83,7 +83,6 @@ public class ApiClient {
 			String response = get(rootUrl);
 			LOGGER.info("Check connection web method response: " + response);
 			
-			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -141,10 +140,8 @@ public class ApiClient {
 	    }
 		
 		String auth = String.format("%s:%s", username, password);
-        LOGGER.info("Auth: " + auth);
         byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(Charset.forName("ISO-8859-1")));
         String authHeader = String.format("Basic %s", new String(encodedAuth));
-        LOGGER.info("authHeader: " + authHeader);
 		req.addHeader(HttpHeaders.AUTHORIZATION, authHeader);
 	}
 	
