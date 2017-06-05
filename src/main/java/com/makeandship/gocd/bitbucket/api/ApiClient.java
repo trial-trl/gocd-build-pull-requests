@@ -1,6 +1,9 @@
 package com.makeandship.gocd.bitbucket.api;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.Properties;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpException;
 import org.apache.http.HttpHeaders;
@@ -106,7 +109,7 @@ public class ApiClient {
 	
 	private String send(HttpRequestBase req) {
 		HttpClient client = getHttpClient();
-		setBasicAuth(req);
+		setAuthHeader(req);
 		
         try {
         	HttpResponse response = client.execute(req);
@@ -125,8 +128,24 @@ public class ApiClient {
 		return HttpClientBuilder.create().build();
     }
 	
-	private void setBasicAuth(HttpRequestBase req){
-		req.addHeader(HttpHeaders.AUTHORIZATION, "Basic bHVpei5hc3N1bmNhb0BlYXN5bnZlc3QuY29tLmJyOlRpdHVsb0AyMDE2MQ==");
+	private void setAuthHeader(HttpRequestBase req){
+		String username;
+		String password;
+		try{
+			Properties properties = new Properties();
+	        properties.load(getClass().getResourceAsStream("/defaults.properties"));
+	        username = properties.getProperty("bitbucket_username");
+	        password = properties.getProperty("bitbucket_password");
+		} catch (Exception e) {
+	        throw new RuntimeException("could not set auth header", e);
+	    }
+		
+		String auth = String.format("%s:%s", username, password);
+        LOGGER.info("Auth: " + auth);
+        byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(Charset.forName("ISO-8859-1")));
+        String authHeader = String.format("Basic %s", new String(encodedAuth));
+        LOGGER.info("authHeader: " + authHeader);
+		req.addHeader(HttpHeaders.AUTHORIZATION, authHeader);
 	}
 	
 	private <R> R parse(String response, TypeReference<R> ref) throws IOException {
