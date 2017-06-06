@@ -8,6 +8,7 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpException;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -76,15 +77,20 @@ public class ApiClient {
     }
 	
 	public void checkConnection(){		
+		String response = null;
 		String rootUrl = getUrl("/");
 		LOGGER.info("Checking connection: getting URL " + rootUrl);
 		LOGGER.info("Credentials: " + credentials.toString());
 		try {
-			String response = get(rootUrl);
+			response = get(rootUrl);
 			LOGGER.info("Check connection web method response: " + response);
 			
 		} catch (Exception e) {
 			e.printStackTrace();
+		}
+		
+		if(response == null){
+			throw new RuntimeException("check connection failed.");
 		}
 	}
 	
@@ -113,9 +119,13 @@ public class ApiClient {
         try {
         	HttpResponse response = client.execute(req);
             HttpEntity entity = response.getEntity();
+            checkStatusCode(response);
             return EntityUtils.toString(entity);
         } catch (IOException e) {
             LOGGER.error("Error at send request: " + e.getMessage());
+            e.printStackTrace();
+        } catch (HttpException e){
+        	LOGGER.error("Error at send HTTP request: " + e.getMessage());
             e.printStackTrace();
         } finally {
           req.releaseConnection();
@@ -123,6 +133,12 @@ public class ApiClient {
         return null;
     }
 	
+	private void checkStatusCode(HttpResponse response) throws HttpException {
+		if(response.getStatusLine().getStatusCode() != HttpStatus.SC_OK){
+			throw new HttpException("Error to execute HTTP request");
+		}
+	}
+
 	private HttpClient getHttpClient() {
 		return HttpClientBuilder.create().build();
     }

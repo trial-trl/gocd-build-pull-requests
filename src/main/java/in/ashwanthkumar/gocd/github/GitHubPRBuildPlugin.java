@@ -213,6 +213,10 @@ public class GitHubPRBuildPlugin implements GoPlugin {
 
         try {
             GitHelper git = gitFactory.create(gitConfig, gitFolderFactory.create(flyweightFolder));
+            // Chamar api
+            // obter o branch
+            // fazer checkout
+            
             git.cloneOrFetch(provider.getRefSpec());
             Map<String, String> branchToRevisionMap = git.getBranchToRevisionMap(provider.getRefPattern());
             Revision revision = git.getLatestRevision();
@@ -412,6 +416,7 @@ public class GitHubPRBuildPlugin implements GoPlugin {
             try {
                 provider.checkConnection(gitConfig);
             } catch (Exception e) {
+            	LOGGER.error("Error to check connection", e);
                 response.put("status", "failure");
                 messages.add(e.getMessage());
             }
