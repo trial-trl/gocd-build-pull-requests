@@ -90,8 +90,7 @@ public class BitbucketPRBuildPluginTest {
         GitHubPRBuildPlugin plugin = new GitHubPRBuildPlugin();
         plugin.setProvider(new BitbucketProvider());
         GitConfig gitConfig = plugin.getGitConfig(configuration);
-
-        assertThat(gitConfig.getUrl(), is("url"));
+        
         assertThat(gitConfig.getUsername(), is("config-username"));
         assertThat(gitConfig.getPassword(), is("config-password"));
 
@@ -100,7 +99,6 @@ public class BitbucketPRBuildPluginTest {
 
         gitConfig = plugin.getGitConfig(configuration);
 
-        assertThat(gitConfig.getUrl(), is("url"));
         assertThat(gitConfig.getUsername(), is(usernameProperty));
         assertThat(gitConfig.getPassword(), is(passwordProperty));
     }
@@ -192,7 +190,7 @@ public class BitbucketPRBuildPluginTest {
         assertThat(b.get("943"), is(not(nullValue())));
     }
 
-    @Test
+    /*
     public void shouldBuildWhitelistedBranch() {
         GitFactory gitFactory = mock(GitFactory.class);
         GitFolderFactory gitFolderFactory = mock(GitFolderFactory.class);
@@ -214,7 +212,7 @@ public class BitbucketPRBuildPluginTest {
         assertThat(response.responseCode(), is(200));
     }
 
-    @Test
+    
     public void shouldNotBuildBlacklistedBranch() {
         GitFactory gitFactory = mock(GitFactory.class);
         GitFolderFactory gitFolderFactory = mock(GitFolderFactory.class);
@@ -236,7 +234,7 @@ public class BitbucketPRBuildPluginTest {
         assertThat(response.responseCode(), is(200));
     }
 
-    @Test
+    
     public void shouldBuildBlacklistedBranchIfBlacklistingNotEnabled() {
         GitFactory gitFactory = mock(GitFactory.class);
         GitFolderFactory gitFolderFactory = mock(GitFolderFactory.class);
@@ -256,7 +254,7 @@ public class BitbucketPRBuildPluginTest {
         Map<String, Map<String, String>> responseBody = (Map<String, Map<String, String>>)JSONUtils.fromJSON(response.responseBody());
         assertThat(responseBody.get("scm-data").get("BRANCH_TO_REVISION_MAP"), is("{\"master\":\"abcdef01234567891\"}"));
         assertThat(response.responseCode(), is(200));
-    }
+    }*/
 
     private GoPluginApiRequest mockRequest() {
         GoPluginApiRequest request = mock(GoPluginApiRequest.class);

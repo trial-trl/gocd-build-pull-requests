@@ -9,27 +9,36 @@ import in.ashwanthkumar.gocd.github.settings.scm.DefaultScmPluginConfigurationVi
 import in.ashwanthkumar.gocd.github.settings.scm.ScmPluginConfigurationView;
 import in.ashwanthkumar.gocd.github.util.URLUtils;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.commons.exec.CommandLine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.makeandship.gocd.bitbucket.api.ApiClient;
 import com.makeandship.gocd.bitbucket.api.Pullrequest;
+import com.makeandship.gocd.bitbucket.api.Pullrequest.Response;
 import com.thoughtworks.go.plugin.api.GoPluginIdentifier;
+import com.tw.go.plugin.cmd.Console;
+import com.tw.go.plugin.git.GitCmdHelper;
 import com.tw.go.plugin.model.GitConfig;
+import com.tw.go.plugin.util.ListUtil;
 import com.tw.go.plugin.util.StringUtil;
+
 
 public class BitbucketProvider implements Provider {
 
 	private static final Logger LOG = LoggerFactory.getLogger(BitbucketProvider.class);
     // public static final String PR_FETCH_REFSPEC = "+refs/pull/*/merge:refs/gh-merge/remotes/origin/*";
     // public static final String PR_MERGE_PREFIX = "refs/gh-merge/remotes/origin/";
-    public static final String REF_SPEC = "+refs/pull/*/head:refs/remotes/origin/pull-request/*";
-    public static final String REF_PATTERN = "refs/remotes/origin/pull-request/";
+    public static final String REF_SPEC = "%s:refs/remotes/origin/%s";
+    public static final String REF_PATTERN = "refs/remotes/origin/%s";
 
     @Override
     public GoPluginIdentifier getPluginId() {
@@ -91,10 +100,13 @@ public class BitbucketProvider implements Provider {
         boolean isDisabled = System.getProperty("go.plugin.bitbucket.pr.populate-details", "Y").equals("N");
         LOG.debug("Populating PR details is disabled");
         if (!isDisabled) {
-        	pr = client.getPullrequest(prId);
+        	Response<Pullrequest> responseApi = client.getPullrequest(prId);
+        	if(responseApi != null && responseApi.getSize() > 0)
+        		pr = responseApi.getValues().get(0);
         }
 
         if (pr != null) {
+        	LOG.info("Populating PR details");
             data.put("PR_BRANCH", pr.getSource().getBranch().getName());
             data.put("TARGET_BRANCH", pr.getDestination().getBranch().getName());
             //data.put("PR_URL", String.valueOf(prStatus.getUrl()));

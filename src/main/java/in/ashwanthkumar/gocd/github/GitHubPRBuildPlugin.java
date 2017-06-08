@@ -1,5 +1,9 @@
 package in.ashwanthkumar.gocd.github;
 
+import com.makeandship.gocd.bitbucket.api.ApiClient;
+import com.makeandship.gocd.bitbucket.api.Pullrequest;
+import com.makeandship.gocd.bitbucket.api.Pullrequest.Response;
+import com.makeandship.gocd.git.provider.bitbucket.GitCmdHelperBitBucket;
 import com.thoughtworks.go.plugin.api.GoApplicationAccessor;
 import com.thoughtworks.go.plugin.api.GoPlugin;
 import com.thoughtworks.go.plugin.api.GoPluginIdentifier;
@@ -61,6 +65,8 @@ public class GitHubPRBuildPlugin implements GoPlugin {
     private GitFactory gitFactory;
     private GitFolderFactory gitFolderFactory;
     private GoApplicationAccessor goApplicationAccessor;
+    
+    private String URL_ROOT = "https://bitbucket.org/%s";
 
     public GitHubPRBuildPlugin() {
         try {
@@ -91,7 +97,7 @@ public class GitHubPRBuildPlugin implements GoPlugin {
 
     @Override
     public GoPluginApiResponse handle(GoPluginApiRequest goPluginApiRequest) {
-    	LOGGER.info("Start handling request");
+    	LOGGER.info("Start handling request: " + goPluginApiRequest.requestName());
         if (goPluginApiRequest.requestName().equals(REQUEST_SCM_CONFIGURATION)) {
             return handleSCMConfiguration();
         } else if (goPluginApiRequest.requestName().equals(REQUEST_SCM_VIEW)) {
@@ -190,6 +196,8 @@ public class GitHubPRBuildPlugin implements GoPlugin {
         Map<String, Object> requestBodyMap = (Map<String, Object>) fromJSON(goPluginApiRequest.requestBody());
         Map<String, String> configuration = keyValuePairs(requestBodyMap, "scm-configuration");
         GitConfig gitConfig = getGitConfig(configuration);
+        String pathUrl = configuration.get("url");
+        gitConfig.setUrl(pathUrl);
 
         Map<String, Object> response = new HashMap<String, Object>();
         List<String> messages = new ArrayList<String>();
@@ -203,31 +211,65 @@ public class GitHubPRBuildPlugin implements GoPlugin {
         response.put("messages", messages);
         return renderJSON(SUCCESS_RESPONSE_CODE, response);
     }
+    
+    private void ResetCredentials(GitConfig gitConfig){
+    	gitConfig.setUsername("");
+        gitConfig.setPassword("");
+    }
 
     public GoPluginApiResponse handleGetLatestRevision(GoPluginApiRequest goPluginApiRequest) {
         Map<String, Object> requestBodyMap = (Map<String, Object>) fromJSON(goPluginApiRequest.requestBody());
         Map<String, String> configuration = keyValuePairs(requestBodyMap, "scm-configuration");
         GitConfig gitConfig = getGitConfig(configuration);
+        String pathUrl = configuration.get("url");
         String flyweightFolder = (String) requestBodyMap.get("flyweight-folder");
         LOGGER.info(String.format("Flyweight: %s", flyweightFolder));
 
         try {
-            GitHelper git = gitFactory.create(gitConfig, gitFolderFactory.create(flyweightFolder));
-            // Chamar api
-            // obter o branch
-            // fazer checkout
+        	GitCmdHelperBitBucket git = new GitCmdHelperBitBucket(gitConfig, gitFolderFactory.create(flyweightFolder));
+            ApiClient client = new ApiClient(gitConfig.getUsername(), gitConfig.getPassword(), pathUrl, null);
+            Response<Pullrequest> responseApi = client.getPullrequest("");
             
-            git.cloneOrFetch(provider.getRefSpec());
-            Map<String, String> branchToRevisionMap = git.getBranchToRevisionMap(provider.getRefPattern());
+            //realizar foreach
+            /*for(Pullrequest pr : responseApi.getValues()){
+            	String sourceBranchName = pr.getSource().getBranch().getName();
+            	
+            }*/
+            
+            if(responseApi.getValues() == null || responseApi.getValues().size() == 0){
+            	LOGGER.info("No active PRs found.");
+            	return renderJSON(SUCCESS_RESPONSE_CODE, null);
+            }
+            
+            Pullrequest pr = responseApi.getValues().get(0);
+            String sourceBranchName = pr.getSource().getBranch().getName();
+            
+            ResetCredentials(gitConfig);
+            //gitConfig.setUrl("https://bitbucket.org/easynvest/easynvest.framework");
+            
+            String refSpec = String.format(provider.getRefSpec(), sourceBranchName, sourceBranchName);
+            gitConfig.setBranch(sourceBranchName);
+            
+            LOGGER.info("Cloning repository");
+            git.cloneOrFetch(refSpec);
+            LOGGER.info("Repository has been cloned");
+            
+            String refPattern = String.format(provider.getRefPattern(), sourceBranchName);
+            Map<String, String> branchToRevisionMap = git.getBranchToRevisionMap(refPattern);
+            LOGGER.info("branchToRevisionMap " + branchToRevisionMap);
+            
             Revision revision = git.getLatestRevision();
+            LOGGER.info("Get Latest Revision " + revision.getRevision());
 
             Map<String, Object> response = new HashMap<String, Object>();
-            Map<String, Object> revisionMap = getRevisionMap(gitConfig, "master", revision);
+            Map<String, Object> revisionMap = getRevisionMap(gitConfig, "develop", revision, pathUrl);
+            LOGGER.info("getRevisionMap");
+            
             response.put("revision", revisionMap);
             Map<String, String> scmDataMap = new HashMap<String, String>();
             scmDataMap.put(BRANCH_TO_REVISION_MAP, JSONUtils.toJSON(branchToRevisionMap));
             response.put("scm-data", scmDataMap);
-            LOGGER.info(String.format("Triggered build for master with head at %s", revision.getRevision()));
+            LOGGER.info(String.format("Triggered build for %s with head at %s", sourceBranchName, revision.getRevision()));
             return renderJSON(SUCCESS_RESPONSE_CODE, response);
         } catch (Throwable t) {
             LOGGER.warn("get latest revision: ", t);
@@ -239,18 +281,46 @@ public class GitHubPRBuildPlugin implements GoPlugin {
         Map<String, Object> requestBodyMap = (Map<String, Object>) fromJSON(goPluginApiRequest.requestBody());
         Map<String, String> configuration = keyValuePairs(requestBodyMap, "scm-configuration");
         GitConfig gitConfig = getGitConfig(configuration);
+        String pathUrl = configuration.get("url");
         Map<String, String> scmData = (Map<String, String>) requestBodyMap.get("scm-data");
         Map<String, String> oldBranchToRevisionMap = (Map<String, String>) fromJSON(scmData.get(BRANCH_TO_REVISION_MAP));
         String flyweightFolder = (String) requestBodyMap.get("flyweight-folder");
         LOGGER.debug(String.format("Fetching latest for: %s", gitConfig.getUrl()));
 
         try {
-            GitHelper git = gitFactory.create(gitConfig, gitFolderFactory.create(flyweightFolder));
-            git.cloneOrFetch(provider.getRefSpec());
-            Map<String, String> newBranchToRevisionMap = git.getBranchToRevisionMap(provider.getRefPattern());
+        	LOGGER.info("flyweightFolder: " + flyweightFolder);
+        	GitCmdHelperBitBucket git = new GitCmdHelperBitBucket(gitConfig, gitFolderFactory.create(flyweightFolder));
+            ApiClient client = new ApiClient(gitConfig.getUsername(), gitConfig.getPassword(), pathUrl, null);
+            
+            LOGGER.info("Getting pull requests");
+            Response<Pullrequest> responseApi = client.getPullrequest("");
+            LOGGER.info("Pull requests: " + responseApi.getSize());
+            
+            if(responseApi.getValues() == null || responseApi.getValues().size() == 0){
+            	LOGGER.info("No active PRs found.");
+            	return renderJSON(SUCCESS_RESPONSE_CODE, null);
+            }
+            
+            Pullrequest pr = responseApi.getValues().get(0);
+            String prId = pr.getId();
+            String sourceBranchName = pr.getSource().getBranch().getName();
+            
+            ResetCredentials(gitConfig);
+            //gitConfig.setUrl("https://bitbucket.org/easynvest/easynvest.framework");
+            
+            String refSpec = String.format(provider.getRefSpec(), sourceBranchName, sourceBranchName);
+            gitConfig.setBranch(sourceBranchName);
+            
+            LOGGER.info("Cloning repository");
+            git.cloneOrFetch(refSpec);
+            LOGGER.info("Repository has been cloned");
+            
+            String refPattern = String.format(provider.getRefPattern(), sourceBranchName);
+            Map<String, String> newBranchToRevisionMap = git.getBranchToRevisionMap(refPattern);
+            LOGGER.info("branchToRevisionMap " + newBranchToRevisionMap);
 
             if (newBranchToRevisionMap.isEmpty()) {
-                LOGGER.debug("No active PRs found.");
+                LOGGER.info("No active PRs found.");
                 Map<String, Object> response = new HashMap<String, Object>();
                 Map<String, String> scmDataMap = new HashMap<String, String>();
                 scmDataMap.put(BRANCH_TO_REVISION_MAP, JSONUtils.toJSON(newBranchToRevisionMap));
@@ -282,7 +352,7 @@ public class GitHubPRBuildPlugin implements GoPlugin {
             }
 
             if (newerRevisions.isEmpty()) {
-                LOGGER.debug(String.format("No updated PRs found. Old: %s New: %s", oldBranchToRevisionMap, newBranchToRevisionMap));
+                LOGGER.info(String.format("No updated PRs found. Old: %s New: %s", oldBranchToRevisionMap, newBranchToRevisionMap));
 
                 Map<String, Object> response = new HashMap<String, Object>();
                 Map<String, String> scmDataMap = new HashMap<String, String>();
@@ -291,13 +361,13 @@ public class GitHubPRBuildPlugin implements GoPlugin {
                 return renderJSON(SUCCESS_RESPONSE_CODE, response);
             } else {
                 LOGGER.info(String.format("new commits: %d", newerRevisions.size()));
-
+                
                 List<Map> revisions = new ArrayList<Map>();
                 for (String branch : newerRevisions.keySet()) {
                     String latestSHA = newerRevisions.get(branch);
                     Revision revision = git.getDetailsForRevision(latestSHA);
 
-                    Map<String, Object> revisionMap = getRevisionMap(gitConfig, branch, revision);
+                    Map<String, Object> revisionMap = getRevisionMap(getGitConfig(configuration), prId, revision, pathUrl);
                     revisions.add(revisionMap);
                 }
                 Map<String, Object> response = new HashMap<String, Object>();
@@ -326,14 +396,37 @@ public class GitHubPRBuildPlugin implements GoPlugin {
         Map<String, Object> requestBodyMap = (Map<String, Object>) fromJSON(goPluginApiRequest.requestBody());
         Map<String, String> configuration = keyValuePairs(requestBodyMap, "scm-configuration");
         GitConfig gitConfig = getGitConfig(configuration);
+        String pathUrl = configuration.get("url");
         String destinationFolder = (String) requestBodyMap.get("destination-folder");
         Map<String, Object> revisionMap = (Map<String, Object>) requestBodyMap.get("revision");
         String revision = (String) revisionMap.get("revision");
         LOGGER.info(String.format("destination: %s. commit: %s", destinationFolder, revision));
 
         try {
-            GitHelper git = gitFactory.create(gitConfig, gitFolderFactory.create(destinationFolder));
-            git.cloneOrFetch(provider.getRefSpec());
+        	GitCmdHelperBitBucket git = new GitCmdHelperBitBucket(gitConfig, gitFolderFactory.create(destinationFolder));
+            ApiClient client = new ApiClient(gitConfig.getUsername(), gitConfig.getPassword(), pathUrl, null);
+            Response<Pullrequest> responseApi = client.getPullrequest("");
+            
+            //realizar foreach
+            /*for(Pullrequest pr : responseApi.getValues()){
+            	String sourceBranchName = pr.getSource().getBranch().getName();
+            	
+            }*/
+            
+            if(responseApi.getValues() == null || responseApi.getValues().size() == 0){
+            	LOGGER.info("No active PRs found.");
+            	return renderJSON(SUCCESS_RESPONSE_CODE, null);
+            }
+            
+            Pullrequest pr = responseApi.getValues().get(0);
+            String sourceBranchName = pr.getSource().getBranch().getName();
+            
+            ResetCredentials(gitConfig);
+            //gitConfig.setUrl("https://bitbucket.org/easynvest/easynvest.framework");
+            
+            String refSpec = String.format(provider.getRefSpec(), sourceBranchName, sourceBranchName);
+            gitConfig.setBranch(sourceBranchName);
+            git.cloneOrFetch(refSpec);
             git.resetHard(revision);
 
             Map<String, Object> response = new HashMap<String, Object>();
@@ -348,9 +441,13 @@ public class GitHubPRBuildPlugin implements GoPlugin {
     }
 
     public GitConfig getGitConfig(Map<String, String> configuration) {
-        GitConfig gitConfig = new GitConfig(configuration.get("url"), configuration.get("username"), configuration.get("password"), null);
+        GitConfig gitConfig = new GitConfig(buildUrl(configuration.get("url")), configuration.get("username"), configuration.get("password"), null);
         provider.addConfigData(gitConfig);
         return gitConfig;
+    }
+    
+    private String buildUrl(String path){
+    	return String.format(URL_ROOT, path);
     }
 
     private void validate(List<Map<String, Object>> response, FieldValidator fieldValidator) {
@@ -361,7 +458,7 @@ public class GitHubPRBuildPlugin implements GoPlugin {
         }
     }
 
-    public Map<String, Object> getRevisionMap(GitConfig gitConfig, String branch, Revision revision) {
+    public Map<String, Object> getRevisionMap(GitConfig gitConfig, String prId, Revision revision, String pathUrl) {
         Map<String, Object> response = new HashMap<String, Object>();
         response.put("revision", revision.getRevision());
         response.put("user", revision.getUser());
@@ -378,7 +475,8 @@ public class GitHubPRBuildPlugin implements GoPlugin {
         }
         response.put("modifiedFiles", modifiedFilesMapList);
         Map<String, String> customDataBag = new HashMap<String, String>();
-        provider.populateRevisionData(gitConfig, branch, revision.getRevision(), customDataBag);
+        gitConfig.setUrl(pathUrl);
+        provider.populateRevisionData(gitConfig, prId, revision.getRevision(), customDataBag);
         response.put("data", customDataBag);
         return response;
     }
@@ -409,9 +507,6 @@ public class GitHubPRBuildPlugin implements GoPlugin {
         if (StringUtil.isEmpty(gitConfig.getUrl())) {
             response.put("status", "failure");
             messages.add("URL is empty");
-        } else if (!provider.isValidURL(gitConfig.getUrl())) {
-            response.put("status", "failure");
-            messages.add("Invalid URL");
         } else {
             try {
                 provider.checkConnection(gitConfig);

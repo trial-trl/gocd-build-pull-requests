@@ -1,6 +1,7 @@
 package com.makeandship.gocd.bitbucket.api;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Properties;
 
 import org.apache.commons.codec.binary.Base64;
@@ -32,6 +33,7 @@ import org.codehaus.jackson.type.TypeReference;
 import com.thoughtworks.go.plugin.api.logging.Logger;
 
 import com.google.gson.JsonObject;
+import com.makeandship.gocd.bitbucket.api.Pullrequest.Response;
 import com.makeandship.gocd.git.provider.bitbucket.BitbucketProvider;
 
 import in.ashwanthkumar.gocd.github.GitHubPRBuildPlugin;
@@ -44,16 +46,16 @@ public class ApiClient {
 	private UsernamePasswordCredentials credentials;
 	private String url;
     private static Logger LOGGER = Logger.getLoggerFor(ApiClient.class);
-    
+    private String ROOT_URL_API = "https://bitbucket.org/api/2.0/repositories/%s";
     
     public <T extends HttpClientFactory> ApiClient(
             String username, String password, 
             String url,
             T httpFactory
         ) {
-    		LOGGER.info(String.format("Initializing ApiClient. Username: %s Password: %s URL: %s", username, password, url));
+    		LOGGER.info("Initializing ApiClient.");
             this.credentials = new UsernamePasswordCredentials(username, password);
-            this.url = url;       
+            this.url = String.format(ROOT_URL_API, url);       
             this.factory = httpFactory != null ? httpFactory : HttpClientFactory.INSTANCE;
         }
     
@@ -94,10 +96,12 @@ public class ApiClient {
 		}
 	}
 	
-	public Pullrequest getPullrequest(String id){
+	public Response<Pullrequest> getPullrequest(String id){
 		String rootUrl = getUrl("/pullrequests/"+id);
 		try {
-			return parse(get(rootUrl), new TypeReference<Pullrequest>() {});
+			LOGGER.info("Calling URL: " + rootUrl);
+			LOGGER.info(get(rootUrl));
+			return parse(get(rootUrl), new TypeReference<Response<Pullrequest>>() {});
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
