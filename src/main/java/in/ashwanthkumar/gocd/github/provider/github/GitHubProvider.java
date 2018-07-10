@@ -105,7 +105,7 @@ public class GitHubProvider implements Provider {
 
     @Override
     public ScmPluginConfigurationView getScmConfigurationView() {
-        return new GitScmPluginConfigurationView();
+        return new GithubScmPluginConfigurationView();
     }
 
     @Override
