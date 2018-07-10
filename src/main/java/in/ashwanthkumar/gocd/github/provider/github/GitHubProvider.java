@@ -4,6 +4,7 @@ import com.thoughtworks.go.plugin.api.GoPluginIdentifier;
 import com.tw.go.plugin.model.GitConfig;
 import com.tw.go.plugin.util.StringUtil;
 import in.ashwanthkumar.gocd.github.provider.Provider;
+import in.ashwanthkumar.gocd.github.provider.git.GitScmPluginConfigurationView;
 import in.ashwanthkumar.gocd.github.provider.github.model.PullRequestStatus;
 import in.ashwanthkumar.gocd.github.settings.general.DefaultGeneralPluginConfigurationView;
 import in.ashwanthkumar.gocd.github.settings.general.GeneralPluginConfigurationView;
@@ -104,7 +105,7 @@ public class GitHubProvider implements Provider {
 
     @Override
     public ScmPluginConfigurationView getScmConfigurationView() {
-        return new DefaultScmPluginConfigurationView();
+        return new GitScmPluginConfigurationView();
     }
 
     @Override
