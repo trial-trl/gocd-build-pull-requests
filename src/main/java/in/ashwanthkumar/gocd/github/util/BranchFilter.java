@@ -1,6 +1,7 @@
 package in.ashwanthkumar.gocd.github.util;
 
 import com.thoughtworks.go.plugin.api.logging.Logger;
+import com.tw.go.plugin.GitHelper;
 
 public class BranchFilter {
 
@@ -8,7 +9,7 @@ public class BranchFilter {
 
     public static final String NO_BRANCHES = "";
     private final BranchMatcher blacklistedBranches;
-    private final BranchMatcher whitelistedBrandches;
+    private final BranchMatcher whitelistedBranches;
 
     public BranchFilter() {
         this(NO_BRANCHES, NO_BRANCHES);
@@ -16,15 +17,23 @@ public class BranchFilter {
 
     public BranchFilter(String blacklistOption, String whitelistOption) {
         this.blacklistedBranches = new BranchMatcher(blacklistOption, BranchMatcher.Mode.FAIL_EMPTY);
-        this.whitelistedBrandches = new BranchMatcher(whitelistOption, BranchMatcher.Mode.PASS_EMPTY);
+        this.whitelistedBranches = new BranchMatcher(whitelistOption, BranchMatcher.Mode.PASS_EMPTY);
     }
 
-    public boolean isBranchValid(String branch) {
+    protected BranchMatcher getBlacklistedBranches() {
+        return this.blacklistedBranches;
+    }
+
+    protected BranchMatcher getWhitelistedBranches() {
+        return this.whitelistedBranches;
+    }
+
+    public boolean isBranchValid(String branch, GitHelper git) {
         if (branch == null) {
             return false;
-        } else if (whitelistedBrandches.isEmpty() && blacklistedBranches.isEmpty()) {
+        } else if (whitelistedBranches.isEmpty() && blacklistedBranches.isEmpty()) {
             return true;
-        } else if (whitelistedBrandches.matches(branch) && !blacklistedBranches.matches(branch)) {
+        } else if (whitelistedBranches.matches(branch) && !blacklistedBranches.matches(branch)) {
             return true;
         } else {
             return false;

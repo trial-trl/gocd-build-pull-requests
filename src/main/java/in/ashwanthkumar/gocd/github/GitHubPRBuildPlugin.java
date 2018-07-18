@@ -278,7 +278,7 @@ public class GitHubPRBuildPlugin implements GoPlugin {
                     .getBranchFilter(configuration);
 
             for (String branch : newBranchToRevisionMap.keySet()) {
-                if (branchFilter.isBranchValid(branch)) {
+                if (branchFilter.isBranchValid(branch, git)) {
                     if (branchHasNewChange(oldBranchToRevisionMap.get(branch), newBranchToRevisionMap.get(branch))) {
                         // If there are any changes we should return the only one of them.
                         // Otherwise Go.CD skips other changes (revisions) in this call.

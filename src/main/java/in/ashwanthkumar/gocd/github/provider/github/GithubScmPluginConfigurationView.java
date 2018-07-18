@@ -25,6 +25,6 @@ public class GithubScmPluginConfigurationView extends DefaultScmPluginConfigurat
         String blacklist = configuration.get(BRANCH_BLACKLIST_PROPERTY_NAME);
         String whitelist = configuration.get(BRANCH_WHITELIST_PROPERTY_NAME);
 
-        return new BranchFilter(blacklist, whitelist);
+        return new PRBranchFilter(blacklist, whitelist);
     }
 }
