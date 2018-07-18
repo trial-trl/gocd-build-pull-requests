@@ -255,7 +255,7 @@ public class GitHubPRBuildPlugin implements GoPlugin {
         Map<String, String> oldBranchToRevisionMap = (Map<String, String>) fromJSON(scmData.get(BRANCH_TO_REVISION_MAP));
         Map<String, String> lastKnownBranchToRevisionMap = (Map<String, String>) fromJSON(scmData.get(BRANCH_TO_REVISION_MAP));
         String flyweightFolder = (String) requestBodyMap.get("flyweight-folder");
-        LOGGER.debug(String.format("Fetching latest for: %s", gitConfig.getUrl()));
+        LOGGER.info(String.format("Fetching latest for: %s", gitConfig.getUrl()));
 
         try {
             GitHelper git = gitFactory.create(gitConfig, gitFolderFactory.create(flyweightFolder));
@@ -263,7 +263,7 @@ public class GitHubPRBuildPlugin implements GoPlugin {
             Map<String, String> newBranchToRevisionMap = git.getBranchToRevisionMap(provider.getRefPattern());
 
             if (newBranchToRevisionMap.isEmpty()) {
-                LOGGER.debug("No active PRs found.");
+                LOGGER.info("No active PRs found.");
                 Map<String, Object> response = new HashMap<String, Object>();
                 Map<String, String> scmDataMap = new HashMap<String, String>();
                 scmDataMap.put(BRANCH_TO_REVISION_MAP, JSONUtils.toJSON(newBranchToRevisionMap));
@@ -290,12 +290,12 @@ public class GitHubPRBuildPlugin implements GoPlugin {
                         break;
                     }
                 } else {
-                    LOGGER.debug(String.format("Branch %s is filtered by branch matcher", branch));
+                    LOGGER.info(String.format("Branch %s is filtered by branch matcher", branch));
                 }
             }
 
             if (newerRevisions.isEmpty()) {
-                LOGGER.debug(String.format("No updated PRs found. Old: %s New: %s", oldBranchToRevisionMap, newBranchToRevisionMap));
+                LOGGER.info(String.format("No updated PRs found. Old: %s New: %s", oldBranchToRevisionMap, newBranchToRevisionMap));
 
                 Map<String, Object> response = new HashMap<String, Object>();
                 Map<String, String> scmDataMap = new HashMap<String, String>();
