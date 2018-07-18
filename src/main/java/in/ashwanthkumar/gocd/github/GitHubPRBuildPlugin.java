@@ -263,7 +263,7 @@ public class GitHubPRBuildPlugin implements GoPlugin {
             Map<String, String> newBranchToRevisionMap = git.getBranchToRevisionMap(provider.getRefPattern());
 
             if (newBranchToRevisionMap.isEmpty()) {
-                LOGGER.info("No active PRs found.");
+                LOGGER.info(String.format("No active PRs found for %s.", gitConfig.getUrl()));
                 Map<String, Object> response = new HashMap<String, Object>();
                 Map<String, String> scmDataMap = new HashMap<String, String>();
                 scmDataMap.put(BRANCH_TO_REVISION_MAP, JSONUtils.toJSON(newBranchToRevisionMap));
@@ -290,12 +290,12 @@ public class GitHubPRBuildPlugin implements GoPlugin {
                         break;
                     }
                 } else {
-                    LOGGER.info(String.format("Branch %s is filtered by branch matcher", branch));
+                    LOGGER.info(String.format("Branch %s for %s is filtered by branch matcher", branch, gitConfig.getUrl()));
                 }
             }
 
             if (newerRevisions.isEmpty()) {
-                LOGGER.info(String.format("No updated PRs found. Old: %s New: %s", oldBranchToRevisionMap, newBranchToRevisionMap));
+                LOGGER.info(String.format("No updated PRs found for %s. Old: %s New: %s", gitConfig.getUrl(), oldBranchToRevisionMap, newBranchToRevisionMap));
 
                 Map<String, Object> response = new HashMap<String, Object>();
                 Map<String, String> scmDataMap = new HashMap<String, String>();
