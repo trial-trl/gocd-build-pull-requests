@@ -279,15 +279,19 @@ public class GitHubPRBuildPlugin implements GoPlugin {
 
             for (String branch : newBranchToRevisionMap.keySet()) {
                 if (branchFilter.isBranchValid(branch, git)) {
+                    LOGGER.info(String.format("Branch valid for %s: %s", gitConfig.getUrl(), branch));
                     if (branchHasNewChange(oldBranchToRevisionMap.get(branch), newBranchToRevisionMap.get(branch))) {
                         // If there are any changes we should return the only one of them.
                         // Otherwise Go.CD skips other changes (revisions) in this call.
                         // You can think about it like if we always return a minimum item
                         // of a set with comparable items.
+                        LOGGER.info(String.format("Branch %s for %s has new changes to be built", branch, gitConfig.getUrl()));
                         String newValue = newBranchToRevisionMap.get(branch);
                         newerRevisions.put(branch, newValue);
                         oldBranchToRevisionMap.put(branch, newValue);
                         break;
+                    } else {
+                        LOGGER.info(String.format("Branch %s for %s does not have any new changes", branch, gitConfig.getUrl()));
                     }
                 } else {
                     LOGGER.info(String.format("Branch %s for %s is filtered by branch matcher", branch, gitConfig.getUrl()));
