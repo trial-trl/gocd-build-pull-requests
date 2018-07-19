@@ -19,15 +19,18 @@ public class PRBranchFilter extends BranchFilter {
         super(blacklistedBranches, whitelistedBranches);
     }
 
-    private boolean matches(String branchName) {
+    private boolean matches(String branchName, GitHelper git) {
         if (branchName == null) return false;
-        LOGGER.info(String.format("Verifying that branch (%s) is whitelisted or not blacklisted", branchName));
+        LOGGER.info(String.format("Verifying that branch (%s) is whitelisted or not blacklisted for %s",
+                branchName, git.workingRepositoryUrl()));
         if (this.getWhitelistedBranches().isEmpty() && this.getBlacklistedBranches().isEmpty()) {
-            LOGGER.info(String.format("No whitelist/blacklist entries present. Match is true for branch: %s", branchName));
+            LOGGER.info(String.format("No whitelist/blacklist entries present. Match is true for branch: %s for %s",
+                    branchName, git.workingRepositoryUrl()));
             return true;
         }
         if (!this.getBlacklistedBranches().matches(branchName) && this.getWhitelistedBranches().matches(branchName)) {
-            LOGGER.info(String.format("Successfully matched branch (%s)!"));
+            LOGGER.info(String.format("Successfully matched branch (%s) for %s!",
+                    branchName, git.workingRepositoryUrl()));
             return true;
         }
         return false;
@@ -47,24 +50,24 @@ public class PRBranchFilter extends BranchFilter {
     public boolean isBranchValid(String branch, GitHelper git) {
         if (branch == null) return false;
 
-        LOGGER.info(String.format("Testing PR #: %s", branch));
+        LOGGER.info(String.format("Testing PR #: %s for %s", branch, git.workingRepositoryUrl()));
         Map<String, String> prToRevision =  git.getBranchToRevisionMap(GitHubProvider.REF_PATTERN);
         Map<String, String> branchToRevision = git.getBranchLatestRevisions();
         if (branchToRevision.size() == 0) {
-            LOGGER.info("Could not develop map of branch -> revision");
+            LOGGER.info(String.format("Could not develop map of branch -> revision for PR # %s of %s", branch, git.workingRepositoryUrl()));
         }
 
         String revision = prToRevision.get(branch);
-        LOGGER.info(String.format("Finding Equivalent Branch Name for Revision: %s", revision));
+        LOGGER.info(String.format("Finding Equivalent Branch Name for Revision: %s for %s", revision, git.workingRepositoryUrl()));
         if (!branchToRevision.values().contains(revision)) {
-            LOGGER.info(String.format("Failed to find equivalent item for revision %s in branch -> revision map", revision));
+            LOGGER.info(String.format("Failed to find equivalent item for revision %s in branch -> revision map for %s", revision, git.workingRepositoryUrl()));
             logRevisionMaps(branchToRevision, prToRevision);
             return false;
         }
         for (String branchName : branchToRevision.keySet()) {
             String candidateRevision = branchToRevision.get(branchName);
             if (candidateRevision.equals(revision)) {
-                return this.matches(branchName);
+                return this.matches(branchName, git);
             }
         }
         LOGGER.info(String.format("Failed to match branch name to PR #: %s with Revision: %s", branch, revision));
