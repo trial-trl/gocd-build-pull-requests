@@ -1,5 +1,7 @@
 package in.ashwanthkumar.gocd.github.util;
 
+import com.thoughtworks.go.plugin.api.logging.Logger;
+
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
@@ -9,6 +11,7 @@ import java.util.List;
 public class BranchMatcher {
 
     public static final String SEPARATOR = ",(?![^{]*\\})";
+    private static Logger LOGGER = Logger.getLoggerFor(BranchMatcher.class);
 
     public enum Mode {
         PASS_EMPTY,
@@ -40,6 +43,7 @@ public class BranchMatcher {
         if (patterns.isEmpty()) {
             return mode == Mode.PASS_EMPTY;
         }
+        LOGGER.info(String.format("Matching branch %s to pattern: %s", branch, pattern));
 
         Path branchAsPath = getAsPath(branch);
         for (PathMatcher pathMatcher : patterns) {
