@@ -61,7 +61,7 @@ public class PRBranchFilter extends BranchFilter {
         LOGGER.info(String.format("Finding Equivalent Branch Name for Revision: %s for %s", revision, git.workingRepositoryUrl()));
         if (!branchToRevision.values().contains(revision)) {
             LOGGER.info(String.format("Failed to find equivalent item for revision %s in branch -> revision map for %s", revision, git.workingRepositoryUrl()));
-            logRevisionMaps(branchToRevision, prToRevision);
+            //logRevisionMaps(branchToRevision, prToRevision);
             return false;
         }
         for (String branchName : branchToRevision.keySet()) {
@@ -71,7 +71,7 @@ public class PRBranchFilter extends BranchFilter {
             }
         }
         LOGGER.info(String.format("Failed to match branch name to PR #: %s with Revision: %s", branch, revision));
-        logRevisionMaps(branchToRevision, prToRevision);
+        //logRevisionMaps(branchToRevision, prToRevision);
         return false;
     }
 
