@@ -22,8 +22,14 @@ public class PRBranchFilter extends BranchFilter {
     private boolean matches(String branchName) {
         if (branchName == null) return false;
         LOGGER.info(String.format("Verifying that branch (%s) is whitelisted or not blacklisted", branchName));
-        if (this.getWhitelistedBranches().isEmpty() && this.getBlacklistedBranches().isEmpty()) return true;
-        if (!this.getBlacklistedBranches().matches(branchName) && this.getWhitelistedBranches().matches(branchName)) return true;
+        if (this.getWhitelistedBranches().isEmpty() && this.getBlacklistedBranches().isEmpty()) {
+            LOGGER.info(String.format("No whitelist/blacklist entries present. Match is true for branch: %s", branchName));
+            return true;
+        }
+        if (!this.getBlacklistedBranches().matches(branchName) && this.getWhitelistedBranches().matches(branchName)) {
+            LOGGER.info(String.format("Successfully matched branch (%s)!"));
+            return true;
+        }
         return false;
     }
 
