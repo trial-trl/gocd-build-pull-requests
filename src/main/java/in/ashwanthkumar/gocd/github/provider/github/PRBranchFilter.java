@@ -4,7 +4,11 @@ import com.thoughtworks.go.plugin.api.logging.Logger;
 import com.tw.go.plugin.GitHelper;
 import in.ashwanthkumar.gocd.github.util.BranchFilter;
 import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.lang.UnhandledException;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.util.Map;
 
 public class PRBranchFilter extends BranchFilter {
@@ -23,6 +27,16 @@ public class PRBranchFilter extends BranchFilter {
         return false;
     }
 
+    private void logRevisionMaps(Map<String, String> branchToRevision, Map<String, String> prToRevision) {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        PrintStream ps = new PrintStream(os);
+        MapUtils.debugPrint(ps, "Branch2Revision", branchToRevision);
+        MapUtils.debugPrint(ps, "PRNum2Revision", prToRevision);
+        try {
+            LOGGER.info(os.toString("UTF8"));
+        } catch (UnsupportedEncodingException e) {}
+    }
+
     @Override
     public boolean isBranchValid(String branch, GitHelper git) {
         if (branch == null) return false;
@@ -30,13 +44,15 @@ public class PRBranchFilter extends BranchFilter {
         LOGGER.info(String.format("Testing PR #: %s", branch));
         Map<String, String> prToRevision =  git.getBranchToRevisionMap(GitHubProvider.REF_PATTERN);
         Map<String, String> branchToRevision = git.getBranchLatestRevisions();
+        if (branchToRevision.size() == 0) {
+            LOGGER.info("Could not develop map of branch -> revision");
+        }
 
         String revision = prToRevision.get(branch);
-        LOGGER.info(String.format("Finding Equivalent Branch Name forRevision: %s", revision));
+        LOGGER.info(String.format("Finding Equivalent Branch Name for Revision: %s", revision));
         if (!branchToRevision.values().contains(revision)) {
-            LOGGER.info(String.format("Failed to find equivalent item for revision in branch -> revision map"));
-            MapUtils.debugPrint(System.out, "Branch2Revision", branchToRevision);
-            MapUtils.debugPrint(System.out, "PRNum2Revision", prToRevision);
+            LOGGER.info(String.format("Failed to find equivalent item for revision %s in branch -> revision map", revision));
+            logRevisionMaps(branchToRevision, prToRevision);
             return false;
         }
         for (String branchName : branchToRevision.keySet()) {
@@ -46,8 +62,7 @@ public class PRBranchFilter extends BranchFilter {
             }
         }
         LOGGER.info(String.format("Failed to match branch name to PR #: %s with Revision: %s", branch, revision));
-        MapUtils.debugPrint(System.out, "Branch2Revision", branchToRevision);
-        MapUtils.debugPrint(System.out, "PRNum2Revision", prToRevision);
+        logRevisionMaps(branchToRevision, prToRevision);
         return false;
     }
 
