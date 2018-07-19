@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>in.ashwanthkumar</groupId>
     <artifactId>gocd-github-pr-material</artifactId>
-    <version>1.4.4</version>
+    <version>1.4.5</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -24,6 +24,11 @@
             <groupId>in.ashwanthkumar</groupId>
             <artifactId>git-cmd</artifactId>
             <version>1.4.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-collections4</artifactId>
+            <version>4.2</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
