@@ -21,10 +21,14 @@ import in.ashwanthkumar.gocd.github.util.GitFolderFactory;
 import in.ashwanthkumar.gocd.github.util.JSONUtils;
 import in.ashwanthkumar.utils.collections.Lists;
 import in.ashwanthkumar.utils.func.Function;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Constructor;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -339,6 +343,14 @@ public class GitHubPRBuildPlugin implements GoPlugin {
                 // (see if (newerRevisions.isEmpty()) { ... } clause)
                 scmDataMap.put(BRANCH_TO_REVISION_MAP, JSONUtils.toJSON(oldBranchToRevisionMap));
                 response.put("scm-data", scmDataMap);
+                if (gitConfig.getUrl().contains("sample-kit-mapper")) {
+                    ByteArrayOutputStream os = new ByteArrayOutputStream();
+                    PrintStream ps = new PrintStream(os);
+                    MapUtils.debugPrint(ps, "SCM Data", response);
+                    try {
+                        LOGGER.info(os.toString("UTF8"));
+                    } catch (UnsupportedEncodingException e) {}
+                }
                 return renderJSON(SUCCESS_RESPONSE_CODE, response);
             }
         } catch (Throwable t) {
