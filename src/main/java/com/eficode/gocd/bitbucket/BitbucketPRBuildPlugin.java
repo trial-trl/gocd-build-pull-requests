@@ -33,8 +33,8 @@ import static com.eficode.gocd.bitbucket.util.JSONUtils.fromJSON;
 import static java.util.Arrays.asList;
 
 @Extension
-public class GitHubPRBuildPlugin implements GoPlugin {
-    private static Logger LOGGER = Logger.getLoggerFor(GitHubPRBuildPlugin.class);
+public class BitbucketPRBuildPlugin implements GoPlugin {
+    private static Logger LOGGER = Logger.getLoggerFor(BitbucketPRBuildPlugin.class);
 
     public static final String EXTENSION_NAME = "scm";
     private static final List<String> goSupportedVersions = asList("1.0");
@@ -65,7 +65,7 @@ public class GitHubPRBuildPlugin implements GoPlugin {
     private GitFolderFactory gitFolderFactory;
     private GoApplicationAccessor goApplicationAccessor;
 
-    public GitHubPRBuildPlugin() {
+    public BitbucketPRBuildPlugin() {
         try {
             Properties properties = new Properties();
             properties.load(getClass().getResourceAsStream("/defaults.properties"));
@@ -80,7 +80,7 @@ public class GitHubPRBuildPlugin implements GoPlugin {
         }
     }
 
-    public GitHubPRBuildPlugin(Provider provider, GitFactory gitFactory, GitFolderFactory gitFolderFactory, GoApplicationAccessor goApplicationAccessor) {
+    public BitbucketPRBuildPlugin(Provider provider, GitFactory gitFactory, GitFolderFactory gitFolderFactory, GoApplicationAccessor goApplicationAccessor) {
         this.provider = provider;
         this.gitFactory = gitFactory;
         this.gitFolderFactory = gitFolderFactory;

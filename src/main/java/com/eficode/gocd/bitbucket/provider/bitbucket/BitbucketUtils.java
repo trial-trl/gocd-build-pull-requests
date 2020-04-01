@@ -8,17 +8,8 @@ import java.io.IOException;
 import java.util.Properties;
 
 public class BitbucketUtils {
-    /**
-     * General convention is
-     *  === Public Github URL ===
-     * https://github.com/ashwanthkumar/gocd-build-github-pull-requests.git
-     * git@github.com:ashwanthkumar/gocd-build-github-pull-requests.git
-     *
-     *  === Github Enterprise URL ===
-     * http://code.corp.yourcompany.com/username/repo
-     * git@code.corp.yourcompany.com/username/repo
-     */
-    public static String parseGithubUrl(String url) {
+
+    public static String parseBBUrl(String url) {
         String[] urlParts = url.split("/");
         String repo = urlParts[urlParts.length - 1];
         String usernameWithSSHPrefix = urlParts[urlParts.length - 2];
@@ -30,6 +21,14 @@ public class BitbucketUtils {
         String urlWithoutPrefix = String.format("%s/%s", usernameWithSSHPrefix, repo);
         if (urlWithoutPrefix.endsWith(".git")) return urlWithoutPrefix.substring(0, urlWithoutPrefix.length() - 4);
         else return urlWithoutPrefix;
+    }
+
+    public static String parseBBProject(String url){
+        return "testiProjekti";
+    }
+
+    public static String parseBBRepository(String url){
+        return "testiRepo";
     }
 
     public static int prIdFrom(String diffUrl) {

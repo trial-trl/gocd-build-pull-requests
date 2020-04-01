@@ -61,10 +61,13 @@ public class BitbucketProvider implements Provider {
         return new URLUtils().isValidURL(url);
     }
 
+    /**
+     *  TODO. Tarvitsee projektin nimen kuules!!!!
+     */
     @Override
     public void checkConnection(GitConfig gitConfig) {
         try {
-            loginWith(gitConfig).getRepository(BitbucketUtils.parseGithubUrl(gitConfig.getEffectiveUrl()));
+            loginWith(gitConfig).getRepository(BitbucketUtils.parseBBUrl(gitConfig.getEffectiveUrl()));
         } catch (Exception e) {
             throw new RuntimeException(String.format("check connection failed. %s", e.getMessage()), e);
         }
@@ -123,9 +126,16 @@ public class BitbucketProvider implements Provider {
         return null;
     }
 
+    /**
+     * TODO. Muuta bitbucket muotoon.
+     * @param gitConfig
+     * @param currentPullRequestID
+     * @return
+     * @throws IOException
+     */
     private GHPullRequest pullRequestFrom(GitConfig gitConfig, int currentPullRequestID) throws IOException {
         return loginWith(gitConfig)
-                .getRepository(BitbucketUtils.parseGithubUrl(gitConfig.getEffectiveUrl()))
+                .getRepository(BitbucketUtils.parseBBUrl(gitConfig.getEffectiveUrl()))
                 .getPullRequest(currentPullRequestID);
     }
 
@@ -146,6 +156,12 @@ public class BitbucketProvider implements Provider {
         };
     }
 
+    /**
+     * TODO. REPLACE WITH BITBUCKET REST CLIENT
+     * @param gitConfig
+     * @return
+     * @throws IOException
+     */
     private GitHub loginWith(GitConfig gitConfig) throws IOException {
         if (hasCredentials(gitConfig))
             return GitHub.connectUsingPassword(gitConfig.getUsername(), gitConfig.getPassword());

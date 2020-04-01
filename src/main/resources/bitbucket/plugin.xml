@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <go-plugin id="github.pr" version="1">
     <about>
-        <name>Github Pull Requests Builder</name>
+        <name>Bitbucket Pull Requests Builder</name>
         <version>${version}</version>
         <target-go-version>15.1.0</target-go-version>
-        <description>Plugin that polls a GitHub repository for pull requests and triggers a build for each of them</description>
+        <description>Plugin that polls a Bitbucket repository for pull requests and triggers a build for each of them</description>
         <vendor>
             <name>Ashwanth Kumar</name>
             <url>https://github.com/ashwanthkumar/gocd-build-github-pull-requests</url>

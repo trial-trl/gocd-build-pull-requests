@@ -36,7 +36,7 @@ import static org.mockito.Mockito.*;
 import static org.hamcrest.CoreMatchers.containsString;
 
 
-public class GitHubPRBuildPluginTest {
+public class BitbucketPRBuildPluginTest {
     public static final String TEST_DIR = "/tmp/" + UUID.randomUUID();
     public static File propertyFile;
     public static boolean propertyFileExisted = false;
@@ -75,7 +75,7 @@ public class GitHubPRBuildPluginTest {
         configuration.put("password", "config-password");
         configuration.put("shallowClone", "true");
 
-        GitHubPRBuildPlugin plugin = new GitHubPRBuildPlugin();
+        BitbucketPRBuildPlugin plugin = new BitbucketPRBuildPlugin();
         plugin.setProvider(new BitbucketProvider());
         GitConfig gitConfig = plugin.getGitConfig(configuration);
 
@@ -101,7 +101,7 @@ public class GitHubPRBuildPluginTest {
     public void shouldHandleInvalidURLCorrectly_ValidationRequest() {
         Map request = createRequestMap(asList(new Pair("url", "crap")));
 
-        GoPluginApiResponse response = new GitHubPRBuildPlugin().handle(createGoPluginApiRequest(GitHubPRBuildPlugin.REQUEST_VALIDATE_SCM_CONFIGURATION, request));
+        GoPluginApiResponse response = new BitbucketPRBuildPlugin().handle(createGoPluginApiRequest(BitbucketPRBuildPlugin.REQUEST_VALIDATE_SCM_CONFIGURATION, request));
 
         verifyResponse(response.responseBody(), asList(new Pair("url", "Invalid URL")));
     }
@@ -116,9 +116,9 @@ public class GitHubPRBuildPluginTest {
     @Ignore
     @Test
     public void shouldGetLatestRevision() {
-        GitHubPRBuildPlugin plugin = new GitHubPRBuildPlugin();
+        BitbucketPRBuildPlugin plugin = new BitbucketPRBuildPlugin();
         plugin.setProvider(new BitbucketProvider());
-        GitHubPRBuildPlugin pluginSpy = spy(plugin);
+        BitbucketPRBuildPlugin pluginSpy = spy(plugin);
 
         GoPluginApiRequest request = mock(GoPluginApiRequest.class);
         when(request.requestBody()).thenReturn("{scm-configuration: {url: {value: \"https://github.com/mdaliejaz/samplerepo.git\"}}, flyweight-folder: \"" + TEST_DIR + "\"}");
@@ -137,14 +137,14 @@ public class GitHubPRBuildPluginTest {
     @Test
     public void shouldMaskPasswordBeforeReturningTheErrorMessage() {
         BitbucketProvider provider = mock(BitbucketProvider.class);
-        GitHubPRBuildPlugin gitHubPRBuildPlugin = new GitHubPRBuildPlugin();
-        gitHubPRBuildPlugin.setProvider(provider);
+        BitbucketPRBuildPlugin bitbucketPRBuildPlugin = new BitbucketPRBuildPlugin();
+        bitbucketPRBuildPlugin.setProvider(provider);
 
         GoPluginApiRequest request = mock(GoPluginApiRequest.class);
         when(request.requestBody()).thenReturn("{scm-configuration: {url: {value: \"https://github.com/mdaliejaz/samplerepo.git\"}, username: {value: \"foo\"}, password: {value: \"secret\"}}, flyweight-folder: \"" + TEST_DIR + "\"}");
         when(provider.getRefSpec()).thenThrow(new RuntimeException("This is an error message with foo and secret"));
 
-        GoPluginApiResponse response = gitHubPRBuildPlugin.handleGetLatestRevision(request);
+        GoPluginApiResponse response = bitbucketPRBuildPlugin.handleGetLatestRevision(request);
 
         assertThat(response.responseBody(), containsString("****"));
         assertFalse(response.responseBody().contains("secret"));
@@ -154,14 +154,14 @@ public class GitHubPRBuildPluginTest {
     @Test
     public void shouldMaskUsernameAndPasswordInErrorMessageIfExists() {
         BitbucketProvider provider = mock(BitbucketProvider.class);
-        GitHubPRBuildPlugin gitHubPRBuildPlugin = new GitHubPRBuildPlugin();
-        gitHubPRBuildPlugin.setProvider(provider);
+        BitbucketPRBuildPlugin bitbucketPRBuildPlugin = new BitbucketPRBuildPlugin();
+        bitbucketPRBuildPlugin.setProvider(provider);
 
         GoPluginApiRequest request = mock(GoPluginApiRequest.class);
         when(request.requestBody()).thenReturn("{scm-configuration: {url: {value: \"https://github.com/mdaliejaz/samplerepo.git\"}, username: {value: \"\"}, password: {value: \"\"}}, flyweight-folder: \"" + TEST_DIR + "\"}");
         when(provider.getRefSpec()).thenThrow(new RuntimeException("Error message with nothing to replace."));
 
-        GoPluginApiResponse response = gitHubPRBuildPlugin.handleGetLatestRevision(request);
+        GoPluginApiResponse response = bitbucketPRBuildPlugin.handleGetLatestRevision(request);
 
         assertFalse(response.responseBody().contains("****"));
         assertTrue(response.responseBody().equals("\"Error message with nothing to replace.\""));
@@ -170,9 +170,9 @@ public class GitHubPRBuildPluginTest {
     @Ignore
     @Test
     public void shouldGetLatestRevisionSince() {
-        GitHubPRBuildPlugin plugin = new GitHubPRBuildPlugin();
+        BitbucketPRBuildPlugin plugin = new BitbucketPRBuildPlugin();
         plugin.setProvider(new BitbucketProvider());
-        GitHubPRBuildPlugin pluginSpy = spy(plugin);
+        BitbucketPRBuildPlugin pluginSpy = spy(plugin);
 
         GoPluginApiRequest request = mock(GoPluginApiRequest.class);
         when(request.requestBody()).thenReturn("{scm-configuration: {url: {value: \"https://github.com/mdaliejaz/samplerepo.git\"}}, previous-revision: {revision: \"a683e0a27e66e710126f7697337efca052396a32\", data: {ACTIVE_PULL_REQUESTS: \"{\\\"1\\\": \\\"12c6ef2ae9843842e4800f2c4763388db81d6ec7\\\"}\"}}, flyweight-folder: \"" + TEST_DIR + "\"}");
@@ -191,7 +191,7 @@ public class GitHubPRBuildPluginTest {
     @Ignore
     @Test
     public void shouldReproduceGetLatestAndGetLatestSince() {
-        GitHubPRBuildPlugin plugin = new GitHubPRBuildPlugin();
+        BitbucketPRBuildPlugin plugin = new BitbucketPRBuildPlugin();
         Map url = new HashMap();
         url.put("value", "https://github.com/gocd/gocd.git");
         Map configuration = new HashMap();
@@ -220,13 +220,13 @@ public class GitHubPRBuildPluginTest {
     public void shouldBuildWhitelistedBranch() {
         GitFactory gitFactory = mock(GitFactory.class);
         GitFolderFactory gitFolderFactory = mock(GitFolderFactory.class);
-        GitHubPRBuildPlugin plugin = new GitHubPRBuildPlugin(
+        BitbucketPRBuildPlugin plugin = new BitbucketPRBuildPlugin(
                 new GitProvider(),
                 gitFactory,
                 gitFolderFactory,
                 mockGoApplicationAccessor()
         );
-        GitHubPRBuildPlugin pluginSpy = spy(plugin);
+        BitbucketPRBuildPlugin pluginSpy = spy(plugin);
 
         GoPluginApiRequest request = mockRequest();
         mockGitHelperToReturnBranch(gitFactory, "test-1");
@@ -242,13 +242,13 @@ public class GitHubPRBuildPluginTest {
     public void shouldNotBuildBlacklistedBranch() {
         GitFactory gitFactory = mock(GitFactory.class);
         GitFolderFactory gitFolderFactory = mock(GitFolderFactory.class);
-        GitHubPRBuildPlugin plugin = new GitHubPRBuildPlugin(
+        BitbucketPRBuildPlugin plugin = new BitbucketPRBuildPlugin(
                 new GitProvider(),
                 gitFactory,
                 gitFolderFactory,
                 mockGoApplicationAccessor()
         );
-        GitHubPRBuildPlugin pluginSpy = spy(plugin);
+        BitbucketPRBuildPlugin pluginSpy = spy(plugin);
 
         GoPluginApiRequest request = mockRequest();
         mockGitHelperToReturnBranch(gitFactory, "master");
@@ -264,13 +264,13 @@ public class GitHubPRBuildPluginTest {
     public void shouldBuildBlacklistedBranchIfBlacklistingNotEnabled() {
         GitFactory gitFactory = mock(GitFactory.class);
         GitFolderFactory gitFolderFactory = mock(GitFolderFactory.class);
-        GitHubPRBuildPlugin plugin = new GitHubPRBuildPlugin(
+        BitbucketPRBuildPlugin plugin = new BitbucketPRBuildPlugin(
                 new GerritProvider(),
                 gitFactory,
                 gitFolderFactory,
                 mockGoApplicationAccessor()
         );
-        GitHubPRBuildPlugin pluginSpy = spy(plugin);
+        BitbucketPRBuildPlugin pluginSpy = spy(plugin);
 
         GoPluginApiRequest request = mockRequest();
         mockGitHelperToReturnBranch(gitFactory, "master");
@@ -326,9 +326,9 @@ public class GitHubPRBuildPluginTest {
     private void verifyValidationSuccess(String url) {
         Map request = createRequestMap(asList(new Pair("url", url)));
 
-        GitHubPRBuildPlugin plugin = new GitHubPRBuildPlugin();
+        BitbucketPRBuildPlugin plugin = new BitbucketPRBuildPlugin();
         plugin.setProvider(new BitbucketProvider());
-        GoPluginApiResponse response = plugin.handle(createGoPluginApiRequest(GitHubPRBuildPlugin.REQUEST_VALIDATE_SCM_CONFIGURATION, request));
+        GoPluginApiResponse response = plugin.handle(createGoPluginApiRequest(BitbucketPRBuildPlugin.REQUEST_VALIDATE_SCM_CONFIGURATION, request));
 
         verifyResponse(response.responseBody(), null);
     }
