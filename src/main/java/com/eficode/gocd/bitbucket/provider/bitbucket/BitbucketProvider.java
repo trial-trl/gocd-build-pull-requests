@@ -27,7 +27,6 @@ public class BitbucketProvider implements Provider {
     // public static final String PR_MERGE_PREFIX = "refs/gh-merge/remotes/origin/";
     public static final String REF_SPEC = "+refs/pull/*/head:refs/remotes/origin/pull-request/*";
     public static final String REF_PATTERN = "refs/remotes/origin/pull-request/";
-    public static final String PUBLIC_GITHUB_ENDPOINT = "https://api.github.com";
 
     private String bitbucketUrl;
     private String projectName;
