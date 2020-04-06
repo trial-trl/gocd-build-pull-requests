@@ -1,5 +1,7 @@
 package com.eficode.gocd.bitbucket.provider.bitbucket;
 
+import com.cdancy.bitbucket.rest.BitbucketClient;
+import com.cdancy.bitbucket.rest.domain.pullrequest.PullRequest;
 import com.eficode.gocd.bitbucket.provider.Provider;
 import com.eficode.gocd.bitbucket.provider.bitbucket.model.PullRequestStatus;
 import com.eficode.gocd.bitbucket.settings.general.DefaultGeneralPluginConfigurationView;
@@ -11,10 +13,6 @@ import com.thoughtworks.go.plugin.api.GoPluginIdentifier;
 import com.tw.go.plugin.model.GitConfig;
 import com.tw.go.plugin.util.StringUtil;
 import in.ashwanthkumar.utils.func.Function;
-import in.ashwanthkumar.utils.lang.StringUtils;
-import org.kohsuke.github.GHPullRequest;
-import org.kohsuke.github.GHUser;
-import org.kohsuke.github.GitHub;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +28,15 @@ public class BitbucketProvider implements Provider {
     public static final String REF_SPEC = "+refs/pull/*/head:refs/remotes/origin/pull-request/*";
     public static final String REF_PATTERN = "refs/remotes/origin/pull-request/";
     public static final String PUBLIC_GITHUB_ENDPOINT = "https://api.github.com";
+
+    private String bitbucketUrl;
+    private String projectName;
+    private String repository;
+
+    @Override
+    public void setApiUrl(String url){
+        this.bitbucketUrl = url;
+    }
 
     @Override
     public GoPluginIdentifier getPluginId() {
@@ -61,13 +68,13 @@ public class BitbucketProvider implements Provider {
         return new URLUtils().isValidURL(url);
     }
 
-    /**
-     *  TODO. Tarvitsee projektin nimen kuules!!!!
-     */
     @Override
     public void checkConnection(GitConfig gitConfig) {
         try {
-            loginWith(gitConfig).getRepository(BitbucketUtils.parseBBUrl(gitConfig.getEffectiveUrl()));
+            BitbucketClient.builder()
+                    .endPoint(this.bitbucketUrl)
+                    .credentials(gitConfig.getUsername() + ":" + gitConfig.getPassword())
+                    .build();
         } catch (Exception e) {
             throw new RuntimeException(String.format("check connection failed. %s", e.getMessage()), e);
         }
@@ -88,7 +95,7 @@ public class BitbucketProvider implements Provider {
         data.put("PR_ID", prId);
 
         PullRequestStatus prStatus = null;
-        boolean isDisabled = System.getProperty("go.plugin.github.pr.populate-details", "Y").equals("N");
+        boolean isDisabled = System.getProperty("go.plugin.bitbucket.pr.populate-details", "Y").equals("N");
         LOG.debug("Populating PR details is disabled");
         if (!isDisabled) {
             prStatus = getPullRequestStatus(gitConfig, prId, prSHA);
@@ -117,8 +124,8 @@ public class BitbucketProvider implements Provider {
 
     private PullRequestStatus getPullRequestStatus(GitConfig gitConfig, String prId, String prSHA) {
         try {
-            GHPullRequest currentPR = pullRequestFrom(gitConfig, Integer.parseInt(prId));
-            return transformGHPullRequestToPullRequestStatus(prSHA).apply(currentPR);
+            PullRequest currentPR = pullRequestFrom(gitConfig, Integer.parseInt(prId));
+            return transformBBPullRequestToPullRequestStatus(prSHA).apply(currentPR);
         } catch (Exception e) {
             // ignore
             LOG.warn(e.getMessage(), e);
@@ -127,48 +134,37 @@ public class BitbucketProvider implements Provider {
     }
 
     /**
-     * TODO. Muuta bitbucket muotoon.
-     * @param gitConfig
-     * @param currentPullRequestID
-     * @return
-     * @throws IOException
+     * TODO. Get projectName and repository.
      */
-    private GHPullRequest pullRequestFrom(GitConfig gitConfig, int currentPullRequestID) throws IOException {
-        return loginWith(gitConfig)
-                .getRepository(BitbucketUtils.parseBBUrl(gitConfig.getEffectiveUrl()))
-                .getPullRequest(currentPullRequestID);
+    private PullRequest pullRequestFrom(GitConfig gitConfig, int currentPullRequestID) throws IOException {
+        return BitbucketClient.builder()
+                .endPoint(this.bitbucketUrl)
+                .credentials(gitConfig.getUsername() + ":" + gitConfig.getPassword())
+                .build()
+                .api()
+                .pullRequestApi()
+                .get(this.projectName, this.repository, currentPullRequestID);
     }
 
-    private Function<GHPullRequest, PullRequestStatus> transformGHPullRequestToPullRequestStatus(final String mergedSHA) {
-        return new Function<GHPullRequest, PullRequestStatus>() {
+    private Function<PullRequest, PullRequestStatus> transformBBPullRequestToPullRequestStatus(final String mergedSHA) {
+        return new Function<PullRequest, PullRequestStatus>() {
             @Override
-            public PullRequestStatus apply(GHPullRequest input) {
-                int prID = BitbucketUtils.prIdFrom(input.getDiffUrl().toString());
+            public PullRequestStatus apply(PullRequest input) {
                 try {
-                    GHUser user = input.getUser();
-                    return new PullRequestStatus(prID, input.getHead().getSha(), mergedSHA, input.getHead().getLabel(),
-                            input.getBase().getLabel(), input.getHtmlUrl().toString(), user.getName(),
-                            user.getEmail(), input.getBody(), input.getTitle());
-                } catch (IOException e) {
+                    return new PullRequestStatus(input.id(),
+                            "",
+                            mergedSHA,
+                            input.fromRef().id(),
+                            input.toRef().id(),
+                            input.links().self().get(0).get("href"),
+                            input.author().user().name(),
+                            input.author().user().emailAddress(),
+                            input.description(),
+                            input.title());
+                } catch (Error e) {
                     throw new RuntimeException(e);
                 }
             }
         };
-    }
-
-    /**
-     * TODO. REPLACE WITH BITBUCKET REST CLIENT
-     * @param gitConfig
-     * @return
-     * @throws IOException
-     */
-    private GitHub loginWith(GitConfig gitConfig) throws IOException {
-        if (hasCredentials(gitConfig))
-            return GitHub.connectUsingPassword(gitConfig.getUsername(), gitConfig.getPassword());
-        else return GitHub.connect();
-    }
-
-    private boolean hasCredentials(GitConfig gitConfig) {
-        return StringUtils.isNotEmpty(gitConfig.getUsername()) && StringUtils.isNotEmpty(gitConfig.getPassword());
     }
 }

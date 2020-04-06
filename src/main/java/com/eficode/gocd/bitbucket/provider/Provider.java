@@ -22,6 +22,8 @@ public interface Provider {
 
     public String getRefPattern();
 
+    public void setApiUrl(String url);
+
     public void populateRevisionData(GitConfig gitConfig, String prId, String prSHA, Map<String, String> data);
 
     public ScmPluginConfigurationView getScmConfigurationView();

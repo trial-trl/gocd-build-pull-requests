@@ -1,6 +1,7 @@
 package com.eficode.gocd.bitbucket;
 
 import com.eficode.gocd.bitbucket.provider.Provider;
+import com.eficode.gocd.bitbucket.provider.bitbucket.BitbucketProvider;
 import com.eficode.gocd.bitbucket.util.BranchFilter;
 import com.eficode.gocd.bitbucket.util.GitFolderFactory;
 import com.eficode.gocd.bitbucket.util.JSONUtils;
@@ -282,7 +283,7 @@ public class BitbucketPRBuildPlugin implements GoPlugin {
             for (String branch : newBranchToRevisionMap.keySet()) {
                 if (branchFilter.isBranchValid(branch)) {
                     if (branchHasNewChange(oldBranchToRevisionMap.get(branch), newBranchToRevisionMap.get(branch))) {
-                        // If there are any changes we should return the only one of them.
+                        // If there are any changes we should return only one of them.
                         // Otherwise Go.CD skips other changes (revisions) in this call.
                         // You can think about it like if we always return a minimum item
                         // of a set with comparable items.
@@ -397,6 +398,7 @@ public class BitbucketPRBuildPlugin implements GoPlugin {
                 StringUtils.trimToNull(configuration.get("defaultBranch")),
                 true,
                 Boolean.parseBoolean(configuration.get("shallowClone")));
+        provider.setApiUrl(configuration.get("apiUrl"));
         provider.addConfigData(gitConfig);
         return gitConfig;
     }
