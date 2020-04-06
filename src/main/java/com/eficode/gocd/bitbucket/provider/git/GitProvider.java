@@ -32,6 +32,10 @@ public class GitProvider implements Provider {
     }
 
     @Override
+    public void setApiUrl(String url) {
+    }
+
+    @Override
     public boolean isValidURL(String url) {
         if (url.startsWith("/")) {
             return new File(url).exists();

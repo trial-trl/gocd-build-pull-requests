@@ -32,6 +32,10 @@ public class StashProvider implements Provider {
     }
 
     @Override
+    public void setApiUrl(String url) {
+    }
+
+    @Override
     public boolean isValidURL(String url) {
         return new URLUtils().isValidURL(url);
     }
