@@ -1,7 +1,7 @@
 package com.eficode.gocd.bitbucket.provider.bitbucket;
 
-import com.eficode.gocd.bitbucket.provider.Provider;
 import com.eficode.gocd.bitbucket.provider.AbstractProviderTest;
+import com.eficode.gocd.bitbucket.provider.Provider;
 import com.eficode.gocd.bitbucket.settings.scm.PluginConfigurationView;
 import org.junit.Test;
 

@@ -1,9 +1,9 @@
 package com.eficode.gocd.bitbucket.provider;
 
-import com.thoughtworks.go.plugin.api.GoPluginIdentifier;
-import com.tw.go.plugin.model.GitConfig;
 import com.eficode.gocd.bitbucket.settings.general.GeneralPluginConfigurationView;
 import com.eficode.gocd.bitbucket.settings.scm.ScmPluginConfigurationView;
+import com.thoughtworks.go.plugin.api.GoPluginIdentifier;
+import com.tw.go.plugin.model.GitConfig;
 
 import java.util.Map;
 

@@ -1,13 +1,13 @@
 package com.eficode.gocd.bitbucket.provider.git;
 
 import com.eficode.gocd.bitbucket.provider.Provider;
+import com.eficode.gocd.bitbucket.settings.general.DefaultGeneralPluginConfigurationView;
+import com.eficode.gocd.bitbucket.settings.general.GeneralPluginConfigurationView;
+import com.eficode.gocd.bitbucket.settings.scm.ScmPluginConfigurationView;
 import com.eficode.gocd.bitbucket.util.URLUtils;
 import com.thoughtworks.go.plugin.api.GoPluginIdentifier;
 import com.tw.go.plugin.HelperFactory;
 import com.tw.go.plugin.model.GitConfig;
-import com.eficode.gocd.bitbucket.settings.general.DefaultGeneralPluginConfigurationView;
-import com.eficode.gocd.bitbucket.settings.general.GeneralPluginConfigurationView;
-import com.eficode.gocd.bitbucket.settings.scm.ScmPluginConfigurationView;
 
 import java.io.File;
 import java.util.Arrays;

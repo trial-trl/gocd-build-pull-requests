@@ -1,6 +1,10 @@
 package com.eficode.gocd.bitbucket;
 
+import com.eficode.gocd.bitbucket.provider.bitbucket.BitbucketProvider;
+import com.eficode.gocd.bitbucket.provider.bitbucket.BitbucketUtils;
+import com.eficode.gocd.bitbucket.provider.gerrit.GerritProvider;
 import com.eficode.gocd.bitbucket.provider.git.GitProvider;
+import com.eficode.gocd.bitbucket.util.GitFactory;
 import com.eficode.gocd.bitbucket.util.GitFolderFactory;
 import com.eficode.gocd.bitbucket.util.JSONUtils;
 import com.google.gson.Gson;
@@ -13,12 +17,11 @@ import com.tw.go.plugin.GitHelper;
 import com.tw.go.plugin.model.GitConfig;
 import com.tw.go.plugin.model.ModifiedFile;
 import com.tw.go.plugin.model.Revision;
-import com.eficode.gocd.bitbucket.provider.gerrit.GerritProvider;
-import com.eficode.gocd.bitbucket.provider.bitbucket.BitbucketUtils;
-import com.eficode.gocd.bitbucket.provider.bitbucket.BitbucketProvider;
-import com.eficode.gocd.bitbucket.util.GitFactory;
 import org.apache.commons.io.FileUtils;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.io.File;
@@ -26,14 +29,12 @@ import java.io.IOException;
 import java.util.*;
 
 import static java.util.Arrays.asList;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.IsNull.nullValue;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
-import static org.hamcrest.CoreMatchers.containsString;
 
 
 public class BitbucketPRBuildPluginTest {

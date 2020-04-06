@@ -1,8 +1,9 @@
 package com.eficode.gocd.bitbucket;
 
 import com.eficode.gocd.bitbucket.provider.Provider;
-import com.eficode.gocd.bitbucket.provider.bitbucket.BitbucketProvider;
+import com.eficode.gocd.bitbucket.settings.scm.PluginConfigurationView;
 import com.eficode.gocd.bitbucket.util.BranchFilter;
+import com.eficode.gocd.bitbucket.util.GitFactory;
 import com.eficode.gocd.bitbucket.util.GitFolderFactory;
 import com.eficode.gocd.bitbucket.util.JSONUtils;
 import com.thoughtworks.go.plugin.api.GoApplicationAccessor;
@@ -18,8 +19,6 @@ import com.tw.go.plugin.model.ModifiedFile;
 import com.tw.go.plugin.model.Revision;
 import com.tw.go.plugin.util.ListUtil;
 import com.tw.go.plugin.util.StringUtil;
-import com.eficode.gocd.bitbucket.settings.scm.PluginConfigurationView;
-import com.eficode.gocd.bitbucket.util.GitFactory;
 import in.ashwanthkumar.utils.collections.Lists;
 import in.ashwanthkumar.utils.func.Function;
 import org.apache.commons.io.IOUtils;
@@ -30,7 +29,6 @@ import java.lang.reflect.Constructor;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import static com.eficode.gocd.bitbucket.util.JSONUtils.fromJSON;
 import static java.util.Arrays.asList;
 
 @Extension

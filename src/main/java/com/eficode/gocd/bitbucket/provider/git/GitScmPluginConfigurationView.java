@@ -1,7 +1,7 @@
 package com.eficode.gocd.bitbucket.provider.git;
 
-import com.eficode.gocd.bitbucket.util.BranchFilter;
 import com.eficode.gocd.bitbucket.settings.scm.DefaultScmPluginConfigurationView;
+import com.eficode.gocd.bitbucket.util.BranchFilter;
 import com.eficode.gocd.bitbucket.util.FieldFactory;
 
 import java.util.Map;
