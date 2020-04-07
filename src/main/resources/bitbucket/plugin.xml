@@ -6,7 +6,7 @@
         <target-go-version>15.1.0</target-go-version>
         <description>Plugin that polls a Bitbucket repository for pull requests and triggers a build for each of them</description>
         <vendor>
-            <name>Ashwanth Kumar</name>
+            <name>Eficode</name>
             <url>https://github.com/ashwanthkumar/gocd-build-github-pull-requests</url>
         </vendor>
     </about>
