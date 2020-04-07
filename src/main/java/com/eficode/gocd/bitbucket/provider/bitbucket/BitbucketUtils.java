@@ -23,14 +23,6 @@ public class BitbucketUtils {
         else return urlWithoutPrefix;
     }
 
-    public static String parseBBProject(String url){
-        return "testiProjekti";
-    }
-
-    public static String parseBBRepository(String url){
-        return "testiRepo";
-    }
-
     public static int prIdFrom(String diffUrl) {
         return Integer.parseInt(diffUrl.substring(diffUrl.indexOf("/pull/") + 6, diffUrl.length() - 5));
     }
