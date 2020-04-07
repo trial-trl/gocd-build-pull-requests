@@ -30,12 +30,14 @@ public class BitbucketProvider implements Provider {
 
     private String bitbucketUrl;
     private String projectName;
-    private String repository;
 
     @Override
     public void setApiUrl(String url){
         this.bitbucketUrl = url;
     }
+
+    @Override
+    public void setProjectName(String name) { this.projectName = name; }
 
     @Override
     public GoPluginIdentifier getPluginId() {
@@ -121,6 +123,11 @@ public class BitbucketProvider implements Provider {
         return new DefaultGeneralPluginConfigurationView();
     }
 
+    private String parseRepository(String url){
+        String [] split = url.split("/");
+        return split[split.length - 1];
+    }
+
     private PullRequestStatus getPullRequestStatus(GitConfig gitConfig, String prId, String prSHA) {
         try {
             PullRequest currentPR = pullRequestFrom(gitConfig, Integer.parseInt(prId));
@@ -142,7 +149,7 @@ public class BitbucketProvider implements Provider {
                 .build()
                 .api()
                 .pullRequestApi()
-                .get(this.projectName, this.repository, currentPullRequestID);
+                .get(this.projectName, parseRepository(gitConfig.getUrl()), currentPullRequestID);
     }
 
     private Function<PullRequest, PullRequestStatus> transformBBPullRequestToPullRequestStatus(final String mergedSHA) {

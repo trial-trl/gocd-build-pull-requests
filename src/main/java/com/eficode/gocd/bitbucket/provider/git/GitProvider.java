@@ -36,6 +36,10 @@ public class GitProvider implements Provider {
     }
 
     @Override
+    public void setProjectName(String name) {
+    }
+
+    @Override
     public boolean isValidURL(String url) {
         if (url.startsWith("/")) {
             return new File(url).exists();

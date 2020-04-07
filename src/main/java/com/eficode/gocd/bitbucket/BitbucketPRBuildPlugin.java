@@ -398,6 +398,7 @@ public class BitbucketPRBuildPlugin implements GoPlugin {
                 Boolean.parseBoolean(configuration.get("shallowClone")));
         provider.setApiUrl(configuration.get("apiUrl"));
         provider.addConfigData(gitConfig);
+        provider.setProjectName(configuration.get("projectName"));
         return gitConfig;
     }
 

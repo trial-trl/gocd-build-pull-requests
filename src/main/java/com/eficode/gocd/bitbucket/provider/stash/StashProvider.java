@@ -36,6 +36,10 @@ public class StashProvider implements Provider {
     }
 
     @Override
+    public void setProjectName(String name) {
+    }
+
+    @Override
     public boolean isValidURL(String url) {
         return new URLUtils().isValidURL(url);
     }
