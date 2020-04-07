@@ -89,7 +89,7 @@
 
     <profiles>
         <profile>
-            <id>bitbucket.pr</id>
+            <id>bitbucketprb.pr</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
