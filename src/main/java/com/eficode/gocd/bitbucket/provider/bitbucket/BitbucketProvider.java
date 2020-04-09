@@ -6,6 +6,7 @@ import com.eficode.gocd.bitbucket.provider.Provider;
 import com.eficode.gocd.bitbucket.provider.bitbucket.model.PullRequestStatus;
 import com.eficode.gocd.bitbucket.settings.general.DefaultGeneralPluginConfigurationView;
 import com.eficode.gocd.bitbucket.settings.general.GeneralPluginConfigurationView;
+import com.eficode.gocd.bitbucket.settings.scm.BitbucketScmPluginConfigurationView;
 import com.eficode.gocd.bitbucket.settings.scm.DefaultScmPluginConfigurationView;
 import com.eficode.gocd.bitbucket.settings.scm.ScmPluginConfigurationView;
 import com.eficode.gocd.bitbucket.util.URLUtils;
@@ -13,8 +14,7 @@ import com.thoughtworks.go.plugin.api.GoPluginIdentifier;
 import com.tw.go.plugin.model.GitConfig;
 import com.tw.go.plugin.util.StringUtil;
 import in.ashwanthkumar.utils.func.Function;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.thoughtworks.go.plugin.api.logging.Logger;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Properties;
 
 public class BitbucketProvider implements Provider {
-    private static final Logger LOG = LoggerFactory.getLogger(BitbucketProvider.class);
+    private static final Logger LOG = Logger.getLoggerFor(BitbucketProvider.class);
     // public static final String PR_FETCH_REFSPEC = "+refs/pull/*/merge:refs/gh-merge/remotes/origin/*";
     // public static final String PR_MERGE_PREFIX = "refs/gh-merge/remotes/origin/";
     public static final String REF_SPEC = "+refs/pull/*/head:refs/remotes/origin/pull-request/*";
@@ -72,11 +72,14 @@ public class BitbucketProvider implements Provider {
     @Override
     public void checkConnection(GitConfig gitConfig) {
         try {
+            LOG.info("checkConnection(): checking connection");
             BitbucketClient.builder()
                     .endPoint(this.bitbucketUrl)
                     .credentials(gitConfig.getUsername() + ":" + gitConfig.getPassword())
                     .build();
+            LOG.info("checkConnection(): If I am here then I work.");
         } catch (Exception e) {
+            LOG.info("checkConnection(): ERROR. I is broke");
             throw new RuntimeException(String.format("check connection failed. %s", e.getMessage()), e);
         }
     }
@@ -115,7 +118,7 @@ public class BitbucketProvider implements Provider {
 
     @Override
     public ScmPluginConfigurationView getScmConfigurationView() {
-        return new DefaultScmPluginConfigurationView();
+        return new BitbucketScmPluginConfigurationView();
     }
 
     @Override
