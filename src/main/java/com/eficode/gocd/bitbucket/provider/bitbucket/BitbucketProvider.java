@@ -2,6 +2,8 @@ package com.eficode.gocd.bitbucket.provider.bitbucket;
 
 import com.cdancy.bitbucket.rest.BitbucketClient;
 import com.cdancy.bitbucket.rest.domain.pullrequest.PullRequest;
+import com.cdancy.bitbucket.rest.domain.pullrequest.PullRequestPage;
+import com.cdancy.bitbucket.rest.features.PullRequestApi;
 import com.eficode.gocd.bitbucket.provider.Provider;
 import com.eficode.gocd.bitbucket.provider.bitbucket.model.PullRequestStatus;
 import com.eficode.gocd.bitbucket.settings.general.DefaultGeneralPluginConfigurationView;
@@ -73,10 +75,14 @@ public class BitbucketProvider implements Provider {
     public void checkConnection(GitConfig gitConfig) {
         try {
             LOG.info("checkConnection(): checking connection");
+            LOG.info("Bitbucket URL: " + this.bitbucketUrl);
+            /*
             BitbucketClient.builder()
                     .endPoint(this.bitbucketUrl)
                     .credentials(gitConfig.getUsername() + ":" + gitConfig.getPassword())
                     .build();
+
+             */
             LOG.info("checkConnection(): If I am here then I work.");
         } catch (Exception e) {
             LOG.info("checkConnection(): ERROR. I is broke");
@@ -101,8 +107,29 @@ public class BitbucketProvider implements Provider {
         PullRequestStatus prStatus = null;
         boolean isDisabled = System.getProperty("go.plugin.bitbucket.pr.populate-details", "Y").equals("N");
         LOG.debug("Populating PR details is disabled");
-        if (!isDisabled) {
-            prStatus = getPullRequestStatus(gitConfig, prId, prSHA);
+        LOG.info("Fetching newest PR");
+        BitbucketClient client = BitbucketClient.builder()
+                .endPoint(this.bitbucketUrl)
+                .credentials(gitConfig.getUsername() + ":" + gitConfig.getPassword())
+                .build();
+        PullRequestApi api = client.api().pullRequestApi();
+        PullRequestPage page = api.list(this.projectName, parseRepository(gitConfig.getUrl()),
+                        null,
+                        null,
+                        "OPEN",
+                        "NEWEST",
+                        true,
+                        true,
+                        null,
+                        null);
+        if(page.size() > 0){
+            LOG.info("PR FOUND: " + page.values().get(0).title());
+            if (!isDisabled) {
+                prStatus = getPullRequestStatus(gitConfig, page.values().get(0).id(), prSHA);
+            }
+        }
+        else{
+            LOG.info("No Pull requests found.");
         }
 
         if (prStatus != null) {
@@ -131,9 +158,9 @@ public class BitbucketProvider implements Provider {
         return split[split.length - 1];
     }
 
-    private PullRequestStatus getPullRequestStatus(GitConfig gitConfig, String prId, String prSHA) {
+    private PullRequestStatus getPullRequestStatus(GitConfig gitConfig, int prId, String prSHA) {
         try {
-            PullRequest currentPR = pullRequestFrom(gitConfig, Integer.parseInt(prId));
+            PullRequest currentPR = pullRequestFrom(gitConfig, prId);
             return transformBBPullRequestToPullRequestStatus(prSHA).apply(currentPR);
         } catch (Exception e) {
             // ignore

@@ -29,6 +29,7 @@
             <groupId>com.cdancy</groupId>
             <artifactId>bitbucket-rest</artifactId>
             <version>2.6.2</version>
+            <classifier>all</classifier>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>

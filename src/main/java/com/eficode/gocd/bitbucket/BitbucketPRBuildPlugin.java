@@ -189,11 +189,9 @@ public class BitbucketPRBuildPlugin implements GoPlugin {
     }
 
     private GoPluginApiResponse handleSCMCheckConnection(GoPluginApiRequest goPluginApiRequest) {
-        LOGGER.info("1");
         Map<String, Object> requestBodyMap = (Map<String, Object>) JSONUtils.fromJSON(goPluginApiRequest.requestBody());
         Map<String, String> configuration = keyValuePairs(requestBodyMap, "scm-configuration");
         GitConfig gitConfig = getGitConfig(configuration);
-        LOGGER.info("2");
         Map<String, Object> response = new HashMap<String, Object>();
         List<String> messages = new ArrayList<String>();
         LOGGER.info("RequestBody: " + goPluginApiRequest.requestBody());
@@ -203,7 +201,6 @@ public class BitbucketPRBuildPlugin implements GoPlugin {
             response.put("status", "success");
             messages.add("Could connect to URL successfully");
         }
-        LOGGER.info("3");
         response.put("messages", messages);
         return renderJSON(SUCCESS_RESPONSE_CODE, response);
     }
@@ -217,7 +214,9 @@ public class BitbucketPRBuildPlugin implements GoPlugin {
 
         try {
             GitHelper git = gitFactory.create(gitConfig, gitFolderFactory.create(flyweightFolder));
+            LOGGER.info("handleGetLatestRevision(): 1");
             git.cloneOrFetch(provider.getRefSpec());
+            LOGGER.info("handleGetLatestRevision(): Cloning successful");
             Map<String, String> branchToRevisionMap = git.getBranchToRevisionMap(provider.getRefPattern());
             Revision revision = git.getLatestRevision();
             git.submoduleUpdate();
@@ -263,11 +262,12 @@ public class BitbucketPRBuildPlugin implements GoPlugin {
         try {
             GitHelper git = gitFactory.create(gitConfig, gitFolderFactory.create(flyweightFolder));
             git.cloneOrFetch(provider.getRefSpec());
+            LOGGER.info("Repo kloonattu.");
             Map<String, String> newBranchToRevisionMap = git.getBranchToRevisionMap(provider.getRefPattern());
             git.submoduleUpdate();
 
             if (newBranchToRevisionMap.isEmpty()) {
-                LOGGER.debug("No active PRs found.");
+                LOGGER.info("No active PRs found.");
                 Map<String, Object> response = new HashMap<String, Object>();
                 Map<String, String> scmDataMap = new HashMap<String, String>();
                 scmDataMap.put(BRANCH_TO_REVISION_MAP, JSONUtils.toJSON(newBranchToRevisionMap));
