@@ -27,8 +27,8 @@ public class BitbucketProvider implements Provider {
     private static final Logger LOG = Logger.getLoggerFor(BitbucketProvider.class);
     // public static final String PR_FETCH_REFSPEC = "+refs/pull/*/merge:refs/gh-merge/remotes/origin/*";
     // public static final String PR_MERGE_PREFIX = "refs/gh-merge/remotes/origin/";
-    public static final String REF_SPEC = "+refs/pull-requests/*:refs/pull-requests/*";
-    public static final String REF_PATTERN = "refs/pull-requests/";
+    public static final String REF_SPEC = "+refs/pull-requests/*/from:refs/remotes/origin/pr/*";
+    public static final String REF_PATTERN = "refs/remotes/origin/pr/";
 
     private String bitbucketUrl;
     private String projectName;
