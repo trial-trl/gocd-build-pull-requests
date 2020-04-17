@@ -214,9 +214,7 @@ public class BitbucketPRBuildPlugin implements GoPlugin {
 
         try {
             GitHelper git = gitFactory.create(gitConfig, gitFolderFactory.create(flyweightFolder));
-            LOGGER.info("handleGetLatestRevision(): 1");
             git.cloneOrFetch(provider.getRefSpec());
-            LOGGER.info("handleGetLatestRevision(): Cloning successful");
             Map<String, String> branchToRevisionMap = git.getBranchToRevisionMap(provider.getRefPattern());
             Revision revision = git.getLatestRevision();
             git.submoduleUpdate();
@@ -262,7 +260,6 @@ public class BitbucketPRBuildPlugin implements GoPlugin {
         try {
             GitHelper git = gitFactory.create(gitConfig, gitFolderFactory.create(flyweightFolder));
             git.cloneOrFetch(provider.getRefSpec());
-            LOGGER.info("Repo kloonattu.");
             Map<String, String> newBranchToRevisionMap = git.getBranchToRevisionMap(provider.getRefPattern());
             git.submoduleUpdate();
 

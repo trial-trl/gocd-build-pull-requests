@@ -9,7 +9,6 @@ import com.eficode.gocd.bitbucket.provider.bitbucket.model.PullRequestStatus;
 import com.eficode.gocd.bitbucket.settings.general.DefaultGeneralPluginConfigurationView;
 import com.eficode.gocd.bitbucket.settings.general.GeneralPluginConfigurationView;
 import com.eficode.gocd.bitbucket.settings.scm.BitbucketScmPluginConfigurationView;
-import com.eficode.gocd.bitbucket.settings.scm.DefaultScmPluginConfigurationView;
 import com.eficode.gocd.bitbucket.settings.scm.ScmPluginConfigurationView;
 import com.eficode.gocd.bitbucket.util.URLUtils;
 import com.thoughtworks.go.plugin.api.GoPluginIdentifier;
