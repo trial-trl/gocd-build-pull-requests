@@ -74,15 +74,12 @@ public class BitbucketProvider implements Provider {
     @Override
     public void checkConnection(GitConfig gitConfig) {
         try {
-            LOG.info("checkConnection(): checking connection");
-            LOG.info("Bitbucket URL: " + this.bitbucketUrl);
-            /*
+            LOG.info("checkConnection(): checking connection..");
+            LOG.info("checkConnection(): Bitbucket URL: " + this.bitbucketUrl);
             BitbucketClient.builder()
                     .endPoint(this.bitbucketUrl)
                     .credentials(gitConfig.getUsername() + ":" + gitConfig.getPassword())
                     .build();
-
-             */
             LOG.info("checkConnection(): If I am here then I work.");
         } catch (Exception e) {
             LOG.info("checkConnection(): ERROR. I is broke");
