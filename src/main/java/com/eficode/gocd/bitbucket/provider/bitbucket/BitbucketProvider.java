@@ -154,8 +154,11 @@ public class BitbucketProvider implements Provider {
     }
 
     private String parseRepository(String url){
-        String [] split = url.split("/");
-        return split[split.length - 1];
+        String [] splitUrl = url.split("/");
+        String [] splitRepo = splitUrl[splitUrl.length - 1].split("\\.");
+        LOG.info("parseRepository(): " + splitRepo[0]);
+
+        return splitRepo[0];
     }
 
     private PullRequestStatus getPullRequestStatus(GitConfig gitConfig, int prId, String prSHA) {
