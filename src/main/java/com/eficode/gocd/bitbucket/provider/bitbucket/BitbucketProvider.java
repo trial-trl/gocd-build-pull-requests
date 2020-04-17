@@ -75,7 +75,7 @@ public class BitbucketProvider implements Provider {
         try {
             LOG.info("checkConnection(): checking connection..");
             LOG.info("checkConnection(): Bitbucket URL: " + this.bitbucketUrl);
-            BitbucketClient.builder()
+            BitbucketClient client = BitbucketClient.builder()
                     .endPoint(this.bitbucketUrl)
                     .credentials(gitConfig.getUsername() + ":" + gitConfig.getPassword())
                     .build();
