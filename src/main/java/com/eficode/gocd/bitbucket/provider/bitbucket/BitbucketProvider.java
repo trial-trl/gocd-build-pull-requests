@@ -28,7 +28,7 @@ public class BitbucketProvider implements Provider {
     // public static final String PR_FETCH_REFSPEC = "+refs/pull/*/merge:refs/gh-merge/remotes/origin/*";
     // public static final String PR_MERGE_PREFIX = "refs/gh-merge/remotes/origin/";
     public static final String REF_SPEC = "+refs/pull-requests/*:refs/pull-requests/*";
-    public static final String REF_PATTERN = "refs/pull-request/";
+    public static final String REF_PATTERN = "refs/pull-requests/";
 
     private String bitbucketUrl;
     private String projectName;
