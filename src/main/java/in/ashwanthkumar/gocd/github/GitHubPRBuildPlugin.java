@@ -24,14 +24,17 @@ import in.ashwanthkumar.utils.collections.Lists;
 import in.ashwanthkumar.utils.func.Function;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static in.ashwanthkumar.gocd.github.util.JSONUtils.fromJSON;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.joining;
 
 @Extension
 public class GitHubPRBuildPlugin implements GoPlugin {
@@ -223,7 +226,7 @@ public class GitHubPRBuildPlugin implements GoPlugin {
 
             Map<String, Object> response = new HashMap<String, Object>();
             String defaultBranch = (StringUtils.isEmpty(gitConfig.getBranch())) ? "master" : gitConfig.getBranch();
-            Map<String, Object> revisionMap = getRevisionMap(gitConfig, defaultBranch, revision);
+            Map<String, Object> revisionMap = populateRevisionMap(gitConfig, defaultBranch, revision);
             response.put("revision", revisionMap);
             Map<String, String> scmDataMap = new HashMap<String, String>();
             scmDataMap.put(BRANCH_TO_REVISION_MAP, JSONUtils.toJSON(branchToRevisionMap));
@@ -254,110 +257,121 @@ public class GitHubPRBuildPlugin implements GoPlugin {
         Map<String, String> configuration = keyValuePairs(requestBodyMap, "scm-configuration");
         final GitConfig gitConfig = getGitConfig(configuration);
         Map<String, String> scmData = (Map<String, String>) requestBodyMap.get("scm-data");
-        Map<String, String> oldBranchToRevisionMap = (Map<String, String>) fromJSON(scmData.get(BRANCH_TO_REVISION_MAP));
-        Map<String, String> lastKnownBranchToRevisionMap = (Map<String, String>) fromJSON(scmData.get(BRANCH_TO_REVISION_MAP));
+        Map<String, String> oldPrRevisionMap = (Map<String, String>) fromJSON(scmData.get(BRANCH_TO_REVISION_MAP));
         String flyweightFolder = (String) requestBodyMap.get("flyweight-folder");
         LOGGER.debug(String.format("Fetching latest for: %s", gitConfig.getUrl()));
 
         try {
             GitHelper git = gitFactory.create(gitConfig, gitFolderFactory.create(flyweightFolder));
-            git.cloneOrFetch(provider.getRefSpec());
-            Map<String, String> newBranchToRevisionMap = git.getBranchToRevisionMap(provider.getRefPattern());
-            git.submoduleUpdate();
+            Map<String, String> newPrToRevisionMap = buildBranchToRevisionMap(git);
 
-            if (newBranchToRevisionMap.isEmpty()) {
-                LOGGER.debug("No active PRs found.");
-                Map<String, Object> response = new HashMap<String, Object>();
-                Map<String, String> scmDataMap = new HashMap<String, String>();
-                scmDataMap.put(BRANCH_TO_REVISION_MAP, JSONUtils.toJSON(newBranchToRevisionMap));
-                response.put("scm-data", scmDataMap);
-                return renderJSON(SUCCESS_RESPONSE_CODE, response);
+            Pair<String, String> newerRevision = findNewerPrRevision(oldPrRevisionMap, newPrToRevisionMap,
+                    configuration);
+
+            if (newerRevision == null) {
+                LOGGER.debug(String.format("No updated PRs found for %s. Old: %s New: %s", gitConfig.getUrl(), oldPrRevisionMap,
+                        newPrToRevisionMap));
+                return buildLatestRevisionResponse(null, newPrToRevisionMap);
             }
 
-            Map<String, String> newerRevisions = new HashMap<String, String>();
+            String pr = newerRevision.getKey();
+            String latestSHA = newerRevision.getValue();
+            String lastKnownSHA = oldPrRevisionMap.get(pr);
+            LOGGER.info(String.format("new commits for %s PR %s, latest commit %s", gitConfig.getUrl(), pr, latestSHA));
+            List<Map<String, Object>> revisions = findAllRevisionsSince(git, gitConfig, pr, lastKnownSHA, latestSHA);
+            LOGGER.debug(String.format("Commits on %s since previous %s: %s", gitConfig.getUrl(), lastKnownSHA,
+                    revisions.stream().map(m -> (String) m.get("revision")).collect(joining(", "))));
 
-            BranchFilter branchFilter = provider
-                    .getScmConfigurationView()
-                    .getBranchFilter(configuration);
+            // We shouldn't return any new PRs from newPRToRevisionMap.
+            // Instead of that, we can always return the old map and update only the one PR
+            // that we will return (as found in newerRevision).
+            Map<String, String> updatedPrToRevisionMap = new HashMap<>(oldPrRevisionMap);
+            updatedPrToRevisionMap.put(pr, latestSHA);
 
-            for (String branch : newBranchToRevisionMap.keySet()) {
-                if (branchFilter.isBranchValid(branch)) {
-                    if (branchHasNewChange(oldBranchToRevisionMap.get(branch), newBranchToRevisionMap.get(branch))) {
-                        // If there are any changes we should return the only one of them.
-                        // Otherwise Go.CD skips other changes (revisions) in this call.
-                        // You can think about it like if we always return a minimum item
-                        // of a set with comparable items.
-                        String newValue = newBranchToRevisionMap.get(branch);
-                        newerRevisions.put(branch, newValue);
-                        oldBranchToRevisionMap.put(branch, newValue);
-                        break;
-                    }
-                } else {
-                    LOGGER.debug(String.format("Branch %s is filtered by branch matcher", branch));
-                }
-            }
-
-            if (newerRevisions.isEmpty()) {
-                LOGGER.debug(String.format("No updated PRs found. Old: %s New: %s", oldBranchToRevisionMap, newBranchToRevisionMap));
-
-                Map<String, Object> response = new HashMap<String, Object>();
-                Map<String, String> scmDataMap = new HashMap<String, String>();
-                scmDataMap.put(BRANCH_TO_REVISION_MAP, JSONUtils.toJSON(newBranchToRevisionMap));
-                response.put("scm-data", scmDataMap);
-                return renderJSON(SUCCESS_RESPONSE_CODE, response);
-            } else {
-                LOGGER.info(String.format("new commits: %d", newerRevisions.size()));
-
-                List<Map> revisions = new ArrayList<Map>();
-                for (final String branch : newerRevisions.keySet()) {
-                    String lastKnownSHA = lastKnownBranchToRevisionMap.get(branch);
-                    String latestSHA = newerRevisions.get(branch);
-                    if(StringUtils.isNotEmpty(lastKnownSHA)) {
-                        git.resetHard(latestSHA);
-                        List<Revision> allRevisionsSince;
-                        try {
-                            allRevisionsSince = git.getRevisionsSince(lastKnownSHA);
-                        } catch (Exception e) {
-                            allRevisionsSince = Collections.singletonList(git.getLatestRevision());
-                        }
-                        List<Map<String, Object>> changesSinceLastCommit = Lists.map(allRevisionsSince, new Function<Revision, Map<String, Object>>() {
-                            @Override
-                            public Map<String, Object> apply(Revision revision) {
-                                return getRevisionMap(gitConfig, branch, revision);
-                            }
-                        });
-                        revisions.addAll(changesSinceLastCommit);
-                    } else {
-                        Revision revision = git.getDetailsForRevision(latestSHA);
-                        Map<String, Object> revisionMap = getRevisionMapForSHA(gitConfig, branch, revision);
-                        revisions.add(revisionMap);
-                    }
-                }
-                Map<String, Object> response = new HashMap<String, Object>();
-                response.put("revisions", revisions);
-                Map<String, String> scmDataMap = new HashMap<String, String>();
-                // We shouldn't return any new branches from newBranchToRevisionMap.
-                // Instead of that, we can always return the previously modified map
-                // (with a newly added or with changed and existing branch), because
-                // it will be the same as there are no any changes
-                // (see if (newerRevisions.isEmpty()) { ... } clause)
-                scmDataMap.put(BRANCH_TO_REVISION_MAP, JSONUtils.toJSON(oldBranchToRevisionMap));
-                response.put("scm-data", scmDataMap);
-                return renderJSON(SUCCESS_RESPONSE_CODE, response);
-            }
+            return buildLatestRevisionResponse(revisions, updatedPrToRevisionMap);
         } catch (Throwable t) {
-            LOGGER.warn("get latest revisions since: ", t);
+            LOGGER.warn("Failed to get latest revisions for " + gitConfig.getUrl(), t);
             return renderJSON(INTERNAL_ERROR_RESPONSE_CODE, removeUsernameAndPassword(t.getMessage(), gitConfig));
         }
     }
 
-    private Map<String, Object> getRevisionMapForSHA(GitConfig gitConfig, String branch, Revision revision) {
+    private Map<String, String> buildBranchToRevisionMap(GitHelper git) {
+        git.cloneOrFetch(provider.getRefSpec());
+        Map<String, String> newBranchToRevisionMap = git.getBranchToRevisionMap(provider.getRefPattern());
+        git.submoduleUpdate();
+
+        return newBranchToRevisionMap;
+    }
+
+    private Pair<String, String> findNewerPrRevision(Map<String, String> oldBranchToRevisionMap,
+            Map<String, String> newBranchToRevisionMap, Map<String, String> configuration) {
+        BranchFilter branchFilter = provider
+                .getScmConfigurationView()
+                .getBranchFilter(configuration);
+
+        for (String branch : newBranchToRevisionMap.keySet()) {
+            if (branchFilter.isBranchValid(branch)) {
+                if (branchHasNewChange(oldBranchToRevisionMap.get(branch), newBranchToRevisionMap.get(branch))) {
+                    // If there are any changes we should return the only one of them.
+                    // Otherwise Go.CD skips other changes (revisions) in this call.
+                    // You can think about it like if we always return a minimum item
+                    // of a set with comparable items.
+                    String newValue = newBranchToRevisionMap.get(branch);
+                    return Pair.of(branch, newValue);
+                }
+            } else {
+                LOGGER.debug(String.format("Branch %s is filtered by branch matcher", branch));
+            }
+        }
+
+        return null;
+    }
+
+    private List<Map<String, Object>> findAllRevisionsSince(GitHelper git, GitConfig gitConfig, String branch, String lastKnownSHA,
+            String latestSHA) {
+        List<Map<String, Object>> revisions = new ArrayList<>();
+
+        if(StringUtils.isNotEmpty(lastKnownSHA)) {
+            git.resetHard(latestSHA);
+            List<Revision> allRevisionsSince;
+            try {
+                allRevisionsSince = git.getRevisionsSince(lastKnownSHA);
+            } catch (Exception e) {
+                allRevisionsSince = Collections.singletonList(git.getLatestRevision());
+            }
+            List<Map<String, Object>> changesSinceLastCommit = Lists.map(allRevisionsSince,
+                    revision -> populateRevisionMap(gitConfig, branch, revision));
+            revisions.addAll(changesSinceLastCommit);
+        } else {
+            Revision revision = git.getDetailsForRevision(latestSHA);
+            Map<String, Object> revisionMap = populateRevisionMapForSHA(gitConfig, branch, revision);
+            revisions.add(revisionMap);
+        }
+
+        return revisions;
+    }
+
+    private Map<String, Object> populateRevisionMapForSHA(GitConfig gitConfig, String branch, Revision revision) {
         // patch for building merge commits
         if (revision.isMergeCommit() && ListUtil.isEmpty(revision.getModifiedFiles())) {
             revision.setModifiedFiles(Lists.of(new ModifiedFile("/dev/null", "deleted")));
         }
 
-        return getRevisionMap(gitConfig, branch, revision);
+        return populateRevisionMap(gitConfig, branch, revision);
+    }
+
+    private GoPluginApiResponse buildLatestRevisionResponse(List<Map<String, Object>> revisions,
+            Map<String, String> updatedPrToRevisionMap) {
+        Map<String, Object> response = new HashMap<>();
+        if (revisions != null) {
+            response.put("revisions", revisions);
+        }
+
+        Map<String, String> scmDataMap = new HashMap<>();
+        scmDataMap.put(BRANCH_TO_REVISION_MAP, JSONUtils.toJSON(updatedPrToRevisionMap));
+        response.put("scm-data", scmDataMap);
+
+        return renderJSON(SUCCESS_RESPONSE_CODE, response);
     }
 
     private boolean branchHasNewChange(String previousSHA, String latestSHA) {
@@ -415,7 +429,7 @@ public class GitHubPRBuildPlugin implements GoPlugin {
         }
     }
 
-    Map<String, Object> getRevisionMap(GitConfig gitConfig, String branch, Revision revision) {
+    Map<String, Object> populateRevisionMap(GitConfig gitConfig, String branch, Revision revision) {
         Map<String, Object> response = new HashMap<String, Object>();
         response.put("revision", revision.getRevision());
         response.put("user", revision.getUser());
