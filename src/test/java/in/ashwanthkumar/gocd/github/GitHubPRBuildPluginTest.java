@@ -127,7 +127,7 @@ public class GitHubPRBuildPluginTest {
         ArgumentCaptor<GitConfig> gitConfig = ArgumentCaptor.forClass(GitConfig.class);
         ArgumentCaptor<String> prId = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<Revision> revision = ArgumentCaptor.forClass(Revision.class);
-        verify(pluginSpy).getRevisionMap(gitConfig.capture(), prId.capture(), revision.capture());
+        verify(pluginSpy).populateRevisionMap(gitConfig.capture(), prId.capture(), revision.capture());
 
         assertThat(prId.getValue(), is("master"));
         assertThat(revision.getValue().getRevision(), is("a683e0a27e66e710126f7697337efca052396a32"));
@@ -181,7 +181,7 @@ public class GitHubPRBuildPluginTest {
         ArgumentCaptor<GitConfig> gitConfig = ArgumentCaptor.forClass(GitConfig.class);
         ArgumentCaptor<String> prId = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<Revision> revision = ArgumentCaptor.forClass(Revision.class);
-        verify(pluginSpy).getRevisionMap(gitConfig.capture(), prId.capture(), revision.capture());
+        verify(pluginSpy).populateRevisionMap(gitConfig.capture(), prId.capture(), revision.capture());
 
         assertThat(prId.getValue(), is("2"));
         assertThat(revision.getValue().getRevision(), is("f985e61e556fc37f952385152d837de426b5cd8a"));
