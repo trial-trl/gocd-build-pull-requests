@@ -219,17 +219,21 @@ public class GitHubPRBuildPlugin implements GoPlugin {
             GitHelper git = gitFactory.create(gitConfig, gitFolderFactory.create(flyweightFolder));
             git.cloneOrFetch(provider.getRefSpec());
             Map<String, String> branchToRevisionMap = git.getBranchToRevisionMap(provider.getRefPattern());
-            Revision revision = git.getLatestRevision();
             git.submoduleUpdate();
 
+            // Select the first PR
+            Map.Entry<String,String> entry = branchToRevisionMap.entrySet().iterator().next();
+            String key = entry.getKey();
+            Revision revision = git.getDetailsForRevision(branchToRevisionMap.get(key));
+            String branch = "gocd-pr/" + entry.getKey();
+
             Map<String, Object> response = new HashMap<>();
-            String defaultBranch = (StringUtils.isEmpty(gitConfig.getBranch())) ? "master" : gitConfig.getBranch();
-            Map<String, Object> revisionMap = populateRevisionMap(gitConfig, defaultBranch, revision);
+            Map<String, Object> revisionMap = populateRevisionMap(gitConfig, branch, revision);
             response.put("revision", revisionMap);
             Map<String, String> scmDataMap = new HashMap<>();
             scmDataMap.put(BRANCH_TO_REVISION_MAP, JSONUtils.toJSON(branchToRevisionMap));
             response.put("scm-data", scmDataMap);
-            LOGGER.info(String.format("Triggered build for " + defaultBranch + " with head at %s", revision.getRevision()));
+            LOGGER.info(String.format("Triggered build for " + branch + " with head at %s", revision.getRevision()));
             return renderJSON(SUCCESS_RESPONSE_CODE, response);
         } catch (Throwable t) {
             LOGGER.warn("get latest revision: ", t);
