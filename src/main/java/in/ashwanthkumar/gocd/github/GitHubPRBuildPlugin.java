@@ -217,24 +217,22 @@ public class GitHubPRBuildPlugin implements GoPlugin {
 
         try {
             GitHelper git = gitFactory.create(gitConfig, gitFolderFactory.create(flyweightFolder));
-            git.cloneOrFetch(provider.getRefSpec());
-            Map<String, String> branchToRevisionMap = git.getBranchToRevisionMap(provider.getRefPattern());
-            git.submoduleUpdate();
+            Map<String, String> branchToRevisionMap = buildBranchToRevisionMap(git);
 
-            // Select the first PR
-            Map.Entry<String,String> entry = branchToRevisionMap.entrySet().iterator().next();
-            String key = entry.getKey();
-            Revision revision = git.getDetailsForRevision(branchToRevisionMap.get(key));
-            String branch = "gocd-pr/" + entry.getKey();
+            Pair<String, String> newerRevision = findNewerPrRevision(Collections.emptyMap(), branchToRevisionMap, configuration);
 
-            Map<String, Object> response = new HashMap<>();
+            if (newerRevision == null) {
+                LOGGER.debug(String.format("No new PRs found for %s. Revisions: %s", gitConfig.getUrl(), branchToRevisionMap));
+                return buildLatestRevisionResponse(null, branchToRevisionMap);
+            }
+
+            Revision revision = git.getDetailsForRevision(newerRevision.getValue());
+            String branch = "gocd-pr/" + newerRevision.getKey();
+
             Map<String, Object> revisionMap = populateRevisionMap(gitConfig, branch, revision);
-            response.put("revision", revisionMap);
-            Map<String, String> scmDataMap = new HashMap<>();
-            scmDataMap.put(BRANCH_TO_REVISION_MAP, JSONUtils.toJSON(branchToRevisionMap));
-            response.put("scm-data", scmDataMap);
-            LOGGER.info(String.format("Triggered build for " + branch + " with head at %s", revision.getRevision()));
-            return renderJSON(SUCCESS_RESPONSE_CODE, response);
+            LOGGER.info(String.format("Triggered build for %s with head at %s. Config URL: %s",
+                    branch, revision.getRevision(), gitConfig.getUrl()));
+            return buildLatestRevisionResponse(revisionMap, branchToRevisionMap);
         } catch (Throwable t) {
             LOGGER.warn("get latest revision: ", t);
             return renderJSON(INTERNAL_ERROR_RESPONSE_CODE, removeUsernameAndPassword(t.getMessage(), gitConfig));
@@ -273,7 +271,7 @@ public class GitHubPRBuildPlugin implements GoPlugin {
             if (newerRevision == null) {
                 LOGGER.debug(String.format("No updated PRs found for %s. Old: %s New: %s", gitConfig.getUrl(), oldPrRevisionMap,
                         newPrToRevisionMap));
-                return buildLatestRevisionResponse(null, newPrToRevisionMap);
+                return buildLatestRevisionsResponse(null, newPrToRevisionMap);
             }
 
             String pr = newerRevision.getKey();
@@ -290,7 +288,7 @@ public class GitHubPRBuildPlugin implements GoPlugin {
             Map<String, String> updatedPrToRevisionMap = new HashMap<>(oldPrRevisionMap);
             updatedPrToRevisionMap.put(pr, latestSHA);
 
-            return buildLatestRevisionResponse(revisions, updatedPrToRevisionMap);
+            return buildLatestRevisionsResponse(revisions, updatedPrToRevisionMap);
         } catch (Throwable t) {
             LOGGER.warn("Failed to get latest revisions for " + gitConfig.getUrl(), t);
             return renderJSON(INTERNAL_ERROR_RESPONSE_CODE, removeUsernameAndPassword(t.getMessage(), gitConfig));
@@ -362,13 +360,25 @@ public class GitHubPRBuildPlugin implements GoPlugin {
         return populateRevisionMap(gitConfig, branch, revision);
     }
 
-    private GoPluginApiResponse buildLatestRevisionResponse(List<Map<String, Object>> revisions,
+    private GoPluginApiResponse buildLatestRevisionResponse(Map<String, Object> revision,
+            Map<String, String> updatedPrToRevisionMap) {
+        Map<String, Object> response = new HashMap<>();
+        if (revision != null) {
+            response.put("revision", revision);
+        }
+        return addScmDataAndBuildResponse(updatedPrToRevisionMap, response);
+    }
+
+    private GoPluginApiResponse buildLatestRevisionsResponse(List<Map<String, Object>> revisions,
             Map<String, String> updatedPrToRevisionMap) {
         Map<String, Object> response = new HashMap<>();
         if (revisions != null) {
             response.put("revisions", revisions);
         }
+        return addScmDataAndBuildResponse(updatedPrToRevisionMap, response);
+    }
 
+    private GoPluginApiResponse addScmDataAndBuildResponse(Map<String, String> updatedPrToRevisionMap, Map<String, Object> response) {
         Map<String, String> scmDataMap = new HashMap<>();
         scmDataMap.put(BRANCH_TO_REVISION_MAP, JSONUtils.toJSON(updatedPrToRevisionMap));
         response.put("scm-data", scmDataMap);
