@@ -226,6 +226,9 @@ public class GitHubPRBuildPlugin implements GoPlugin {
                 return buildLatestRevisionResponse(null, branchToRevisionMap);
             }
 
+            // Remove all other branches from the response to ensure the next time those will be picked up by GoCD
+            branchToRevisionMap.entrySet().removeIf(entry -> !Objects.equals(entry.getKey(), newerRevision.getKey()));
+
             Revision revision = git.getDetailsForRevision(newerRevision.getValue());
             String branch = "gocd-pr/" + newerRevision.getKey();
 
