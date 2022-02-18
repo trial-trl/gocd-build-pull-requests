@@ -230,7 +230,7 @@ public class GitHubPRBuildPlugin implements GoPlugin {
             branchToRevisionMap.entrySet().removeIf(entry -> !Objects.equals(entry.getKey(), newerRevision.getKey()));
 
             Revision revision = git.getDetailsForRevision(newerRevision.getValue());
-            String branch = "gocd-pr/" + newerRevision.getKey();
+            String branch = newerRevision.getKey();
 
             Map<String, Object> revisionMap = populateRevisionMap(gitConfig, branch, revision);
             LOGGER.info(String.format("Triggered build for %s with head at %s. Config URL: %s",
