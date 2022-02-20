@@ -1,6 +1,7 @@
 package in.ashwanthkumar.gocd.github;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.thoughtworks.go.plugin.api.GoApplicationAccessor;
 import com.thoughtworks.go.plugin.api.request.GoApiRequest;
 import com.thoughtworks.go.plugin.api.request.GoPluginApiRequest;
@@ -26,13 +27,15 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.IsNull.nullValue;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.*;
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 
 public class GitHubPRBuildPluginTest {
@@ -68,7 +71,7 @@ public class GitHubPRBuildPluginTest {
 
     @Test
     public void shouldBuildGitConfig() {
-        HashMap<String, String> configuration = new HashMap<String, String>();
+        HashMap<String, String> configuration = new HashMap<>();
         configuration.put("url", "url");
         configuration.put("username", "config-username");
         configuration.put("password", "config-password");
@@ -98,11 +101,11 @@ public class GitHubPRBuildPluginTest {
     @Ignore("url validation is turned off")
     @Test
     public void shouldHandleInvalidURLCorrectly_ValidationRequest() {
-        Map request = createRequestMap(asList(new Pair("url", "crap")));
+        Map request = createRequestMap(singletonList(new Pair("url", "crap")));
 
         GoPluginApiResponse response = new GitHubPRBuildPlugin().handle(createGoPluginApiRequest(GitHubPRBuildPlugin.REQUEST_VALIDATE_SCM_CONFIGURATION, request));
 
-        verifyResponse(response.responseBody(), asList(new Pair("url", "Invalid URL")));
+        verifyResponse(response.responseBody(), singletonList(new Pair("url", "Invalid URL")));
     }
 
     @Test
@@ -163,7 +166,7 @@ public class GitHubPRBuildPluginTest {
         GoPluginApiResponse response = gitHubPRBuildPlugin.handleGetLatestRevision(request);
 
         assertFalse(response.responseBody().contains("****"));
-        assertTrue(response.responseBody().equals("\"Error message with nothing to replace.\""));
+        assertEquals("\"Error message with nothing to replace.\"", response.responseBody());
     }
 
     @Ignore
@@ -191,11 +194,11 @@ public class GitHubPRBuildPluginTest {
     @Test
     public void shouldReproduceGetLatestAndGetLatestSince() {
         GitHubPRBuildPlugin plugin = new GitHubPRBuildPlugin();
-        Map url = new HashMap();
+        Map<String, String> url = new HashMap<>();
         url.put("value", "https://github.com/gocd/gocd.git");
-        Map configuration = new HashMap();
+        Map<String, Map<String, String>> configuration = new HashMap<>();
         configuration.put("url", url);
-        Map request = new HashMap();
+        Map<String,  Object> request = new HashMap<>();
         request.put("scm-configuration", configuration);
         request.put("flyweight-folder", "/tmp/flyweight-folder");
 
@@ -232,7 +235,8 @@ public class GitHubPRBuildPluginTest {
 
         GoPluginApiResponse response = pluginSpy.handleLatestRevisionSince(request);
 
-        Map<String, Map<String, String>> responseBody = (Map<String, Map<String, String>>)JSONUtils.fromJSON(response.responseBody());
+        Map<String, Map<String, String>> responseBody =
+                (Map<String, Map<String, String>>) JSONUtils.fromJSON(response.responseBody());
         assertThat(responseBody.get("scm-data").get("BRANCH_TO_REVISION_MAP"), is("{\"test-1\":\"abcdef01234567891\"}"));
         assertThat(response.responseCode(), is(200));
     }
@@ -254,7 +258,8 @@ public class GitHubPRBuildPluginTest {
 
         GoPluginApiResponse response = pluginSpy.handleLatestRevisionSince(request);
 
-        Map<String, Map<String, String>> responseBody = (Map<String, Map<String, String>>)JSONUtils.fromJSON(response.responseBody());
+        Map<String, Map<String, String>> responseBody = JSONUtils.fromJSON(response.responseBody(),
+                new TypeToken<Map<String, Map<String, String>>>(){});
         assertThat(responseBody.get("scm-data").get("BRANCH_TO_REVISION_MAP"), is("null"));
         assertThat(response.responseCode(), is(200));
     }
@@ -276,7 +281,8 @@ public class GitHubPRBuildPluginTest {
 
         GoPluginApiResponse response = pluginSpy.handleLatestRevisionSince(request);
 
-        Map<String, Map<String, String>> responseBody = (Map<String, Map<String, String>>)JSONUtils.fromJSON(response.responseBody());
+        Map<String, Map<String, String>> responseBody =
+                (Map<String, Map<String, String>>) JSONUtils.fromJSON(response.responseBody());
         assertThat(responseBody.get("scm-data").get("BRANCH_TO_REVISION_MAP"), is("{\"master\":\"abcdef01234567891\"}"));
         assertThat(response.responseCode(), is(200));
     }
@@ -299,6 +305,7 @@ public class GitHubPRBuildPluginTest {
         when(request.requestBody()).thenReturn("{scm-configuration: {url: {value: \"https://github.com/mdaliejaz/samplerepo.git\"}}, flyweight-folder: \"" + TEST_DIR + "\"}");
 
         GoPluginApiResponse response = pluginSpy.handleGetLatestRevision(request);
+
         Map<String, Map<String, Map<String, String>>> responseBody =
                 (Map<String, Map<String, Map<String, String>>>) JSONUtils.fromJSON(response.responseBody());
         String checkoutBranch = responseBody.get("revision").get("data").get("PR_CHECKOUT_BRANCH");
@@ -353,9 +360,25 @@ public class GitHubPRBuildPluginTest {
         assertEquals("gocd-pr", checkoutBranch);
     }
 
+    @Test
+    public void keyValuePairs_should_extract_values_from_nested_maps() {
+        Map<String, String> keyValuePairs = GitHubPRBuildPlugin.keyValuePairs(
+                JSONUtils.fromJSON(mockRequestBody(), GitHubPRBuildPlugin.REQUEST_BODY_TYPE), "scm-configuration");
+
+        assertThat(keyValuePairs.get("branchblacklist"), is("master"));
+        assertThat(keyValuePairs.get("branchwhitelist"), is("test*, feat*"));
+        assertThat(keyValuePairs.get("url"), is("https://github.com/mdaliejaz/samplerepo.git"));
+        assertThat(keyValuePairs.size(), is(3));
+    }
+
     private GoPluginApiRequest mockRequest() {
         GoPluginApiRequest request = mock(GoPluginApiRequest.class);
-        when(request.requestBody()).thenReturn("{\n" +
+        when(request.requestBody()).thenReturn(mockRequestBody());
+        return request;
+    }
+
+    private String mockRequestBody() {
+        return "{\n" +
                 "    \"scm-configuration\": {\n" +
                 "        \"url\": {\n" +
                 "            \"value\": \"https://github.com/mdaliejaz/samplerepo.git\"\n" +
@@ -371,8 +394,7 @@ public class GitHubPRBuildPluginTest {
                 "        \"BRANCH_TO_REVISION_MAP\": \"{}\"\n" +
                 "    },\n" +
                 "    \"flyweight-folder\": \"\"\n" +
-                "}\n");
-        return request;
+                "}\n";
     }
 
     private void mockGitHelperToReturnBranch(GitFactory gitFactory, final String branch) {
@@ -398,7 +420,7 @@ public class GitHubPRBuildPluginTest {
     // TODO - Write proper tests for the plugin
 
     private void verifyValidationSuccess(String url) {
-        Map request = createRequestMap(asList(new Pair("url", url)));
+        Map<String, Map<String, Map<String, String>>> request = createRequestMap(singletonList(new Pair("url", url)));
 
         GitHubPRBuildPlugin plugin = new GitHubPRBuildPlugin();
         plugin.setProvider(new GitHubProvider());
@@ -407,12 +429,12 @@ public class GitHubPRBuildPluginTest {
         verifyResponse(response.responseBody(), null);
     }
 
-    private Map createRequestMap(List<Pair> pairs) {
-        final Map request = new HashMap();
-        Map scmConfiguration = new HashMap();
+    private Map<String, Map<String, Map<String, String>>> createRequestMap(List<Pair> pairs) {
+        final Map<String, Map<String, Map<String, String>>> request = new HashMap<>();
+        Map<String, Map<String, String>> scmConfiguration = new HashMap<>();
 
         for (Pair pair : pairs) {
-            Map valueMap = new HashMap();
+            Map<String, String> valueMap = new HashMap<>();
             valueMap.put("value", pair.value);
             scmConfiguration.put(pair.key, valueMap);
         }
@@ -423,6 +445,9 @@ public class GitHubPRBuildPluginTest {
 
     private void verifyResponse(String responseBody, List<Pair> pairs) {
         List response = (List) JSONUtils.fromJSON(responseBody);
+
+        System.out.println("response = " + response);
+
         for (Object r : response) {
             System.out.println(r);
         }
@@ -470,7 +495,7 @@ public class GitHubPRBuildPluginTest {
         };
     }
 
-    class Pair {
+    static class Pair {
         String key;
         String value;
 
@@ -488,9 +513,9 @@ public class GitHubPRBuildPluginTest {
         return accessor;
     }
 
-    class TestProvider extends GitHubProvider {
+    static class TestProvider extends GitHubProvider {
 
-        private Map<String, String> revisionData = new HashMap<>();
+        private final Map<String, String> revisionData = new HashMap<>();
 
         TestProvider withRevisionData(String key, String value) {
             revisionData.put(key, value);

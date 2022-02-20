@@ -1,6 +1,7 @@
 package in.ashwanthkumar.gocd.github.util;
 
 import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 
 public class JSONUtils {
     public static Object fromJSON(String json) {
@@ -9,6 +10,10 @@ public class JSONUtils {
 
     public static <T> T fromJSON(String json, Class<T> type) {
         return new GsonBuilder().create().fromJson(json, type);
+    }
+
+    public static <T> T fromJSON(String json, TypeToken<T> typeToken) {
+        return new GsonBuilder().create().fromJson(json, typeToken.getType());
     }
 
     public static String toJSON(Object object) {
