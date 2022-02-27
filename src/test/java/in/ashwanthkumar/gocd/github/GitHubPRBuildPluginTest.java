@@ -7,7 +7,6 @@ import com.thoughtworks.go.plugin.api.request.GoPluginApiRequest;
 import com.thoughtworks.go.plugin.api.response.DefaultGoApiResponse;
 import com.thoughtworks.go.plugin.api.response.GoPluginApiResponse;
 import com.tw.go.plugin.model.GitConfig;
-import com.tw.go.plugin.model.ModifiedFile;
 import com.tw.go.plugin.model.Revision;
 import in.ashwanthkumar.gocd.github.provider.Provider;
 import in.ashwanthkumar.gocd.github.provider.gerrit.GerritProvider;
@@ -364,6 +363,39 @@ public class GitHubPRBuildPluginTest {
     }
 
     @Test
+    public void handleGetLatestRevisionShouldReturnASingleBranch() {
+        GitFactory gitFactory = mock(GitFactory.class);
+
+        Map<String, String> revisions = new HashMap<>();
+        revisions.put("test-1", "test1abcd11111111");
+        revisions.put("test-2", "test2abcd11111111");
+        mockGitRevisions(gitFactory, revisions);
+
+        GitFolderFactory gitFolderFactory = mock(GitFolderFactory.class);
+        Provider provider = new TestProvider();
+        GitHubPRBuildPlugin plugin = new GitHubPRBuildPlugin(
+                provider,
+                gitFactory,
+                gitFolderFactory,
+                mockGoApplicationAccessor()
+        );
+        GitHubPRBuildPlugin pluginSpy = spy(plugin);
+
+        GoPluginApiRequest request = mock(GoPluginApiRequest.class);
+        when(request.requestBody()).thenReturn("{scm-configuration: {url: {value: \"https://github.com/mdaliejaz/samplerepo.git\"}}, flyweight-folder: \"" + TEST_DIR + "\"}");
+
+        GoPluginApiResponse response = pluginSpy.handleGetLatestRevision(request);
+        Map<String, Object> responseBody =
+                (Map<String, Object>) JSONUtils.fromJSON(response.responseBody());
+
+        String branchToRevisionMap = (String) ((Map<String, Object>)responseBody.get("scm-data")).get("BRANCH_TO_REVISION_MAP");
+        assertEquals("{\"test-2\":\"test2abcd11111111\"}", branchToRevisionMap);
+
+        Map<String, String> revision = (Map<String, String>) responseBody.get("revision");
+        assertEquals("test2abcd11111111", revision.get("revision"));
+    }
+
+    @Test
     public void keyValuePairs_should_extract_values_from_nested_maps() {
         Map<String, String> keyValuePairs = GitHubPRBuildPlugin.keyValuePairs(
                 JSONUtils.fromJSON(mockRequestBody(), GitHubPRBuildPlugin.REQUEST_BODY_TYPE), "scm-configuration");
@@ -409,11 +441,22 @@ public class GitHubPRBuildPluginTest {
 
         when(helper.getBranchToRevisionMap(anyString())).thenReturn(result);
         when(helper.getLatestRevision()).thenReturn(
-                new Revision("abcdef01234567891", new Date(), "", "", "", Collections.<ModifiedFile>emptyList())
+                new Revision("abcdef01234567891", new Date(), "", "", "", Collections.emptyList())
         );
         when(helper.getDetailsForRevision("abcdef01234567891")).thenReturn(
-                new Revision("abcdef01234567891", new Date(), "", "", "", Collections.<ModifiedFile>emptyList())
+                new Revision("abcdef01234567891", new Date(), "", "", "", Collections.emptyList())
         );
+    }
+
+    private void mockGitRevisions(GitFactory gitFactory, Map<String, String> revisions) {
+        ExtendedGitCmdHelper helper = mock(ExtendedGitCmdHelper.class);
+        when(gitFactory.create(any(GitConfig.class), any(File.class))).thenReturn(helper);
+
+        when(helper.getBranchToRevisionMap(anyString())).thenReturn(revisions);
+
+        revisions.values().forEach(sha ->
+            when(helper.getDetailsForRevision(sha)).thenReturn(
+                    new Revision(sha, new Date(), "", "", "", Collections.emptyList())));
     }
 
     private void assertPRToRevisionMap(ArgumentCaptor<Map> prStatuses) {
