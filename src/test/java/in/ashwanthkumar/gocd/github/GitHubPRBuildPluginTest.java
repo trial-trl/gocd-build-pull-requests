@@ -1,14 +1,12 @@
 package in.ashwanthkumar.gocd.github;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import com.thoughtworks.go.plugin.api.GoApplicationAccessor;
 import com.thoughtworks.go.plugin.api.request.GoApiRequest;
 import com.thoughtworks.go.plugin.api.request.GoPluginApiRequest;
 import com.thoughtworks.go.plugin.api.response.DefaultGoApiResponse;
 import com.thoughtworks.go.plugin.api.response.GoPluginApiResponse;
 import com.tw.go.plugin.model.GitConfig;
-import com.tw.go.plugin.model.ModifiedFile;
 import com.tw.go.plugin.model.Revision;
 import in.ashwanthkumar.gocd.github.provider.Provider;
 import in.ashwanthkumar.gocd.github.provider.gerrit.GerritProvider;
@@ -28,6 +26,7 @@ import java.io.IOException;
 import java.util.*;
 
 import static java.util.Collections.singletonList;
+import static org.hamcrest.collection.IsMapContaining.hasKey;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.IsNull.nullValue;
@@ -237,6 +236,7 @@ public class GitHubPRBuildPluginTest {
 
         Map<String, Map<String, String>> responseBody =
                 (Map<String, Map<String, String>>) JSONUtils.fromJSON(response.responseBody());
+        assertThat(responseBody, hasKey("revisions"));
         assertThat(responseBody.get("scm-data").get("BRANCH_TO_REVISION_MAP"), is("{\"test-1\":\"abcdef01234567891\"}"));
         assertThat(response.responseCode(), is(200));
     }
@@ -258,9 +258,10 @@ public class GitHubPRBuildPluginTest {
 
         GoPluginApiResponse response = pluginSpy.handleLatestRevisionSince(request);
 
-        Map<String, Map<String, String>> responseBody = JSONUtils.fromJSON(response.responseBody(),
-                new TypeToken<Map<String, Map<String, String>>>(){});
-        assertThat(responseBody.get("scm-data").get("BRANCH_TO_REVISION_MAP"), is("null"));
+        Map<String, Map<String, String>> responseBody =
+                (Map<String, Map<String, String>>) JSONUtils.fromJSON(response.responseBody());
+
+        assertThat(responseBody, not(hasKey("revisions")));
         assertThat(response.responseCode(), is(200));
     }
 
@@ -283,6 +284,7 @@ public class GitHubPRBuildPluginTest {
 
         Map<String, Map<String, String>> responseBody =
                 (Map<String, Map<String, String>>) JSONUtils.fromJSON(response.responseBody());
+        assertThat(responseBody, hasKey("revisions"));
         assertThat(responseBody.get("scm-data").get("BRANCH_TO_REVISION_MAP"), is("{\"master\":\"abcdef01234567891\"}"));
         assertThat(response.responseCode(), is(200));
     }
@@ -361,6 +363,39 @@ public class GitHubPRBuildPluginTest {
     }
 
     @Test
+    public void handleGetLatestRevisionShouldReturnASingleBranch() {
+        GitFactory gitFactory = mock(GitFactory.class);
+
+        Map<String, String> revisions = new HashMap<>();
+        revisions.put("test-1", "test1abcd11111111");
+        revisions.put("test-2", "test2abcd11111111");
+        mockGitRevisions(gitFactory, revisions);
+
+        GitFolderFactory gitFolderFactory = mock(GitFolderFactory.class);
+        Provider provider = new TestProvider();
+        GitHubPRBuildPlugin plugin = new GitHubPRBuildPlugin(
+                provider,
+                gitFactory,
+                gitFolderFactory,
+                mockGoApplicationAccessor()
+        );
+        GitHubPRBuildPlugin pluginSpy = spy(plugin);
+
+        GoPluginApiRequest request = mock(GoPluginApiRequest.class);
+        when(request.requestBody()).thenReturn("{scm-configuration: {url: {value: \"https://github.com/mdaliejaz/samplerepo.git\"}}, flyweight-folder: \"" + TEST_DIR + "\"}");
+
+        GoPluginApiResponse response = pluginSpy.handleGetLatestRevision(request);
+        Map<String, Object> responseBody =
+                (Map<String, Object>) JSONUtils.fromJSON(response.responseBody());
+
+        String branchToRevisionMap = (String) ((Map<String, Object>)responseBody.get("scm-data")).get("BRANCH_TO_REVISION_MAP");
+        assertEquals("{\"test-2\":\"test2abcd11111111\"}", branchToRevisionMap);
+
+        Map<String, String> revision = (Map<String, String>) responseBody.get("revision");
+        assertEquals("test2abcd11111111", revision.get("revision"));
+    }
+
+    @Test
     public void keyValuePairs_should_extract_values_from_nested_maps() {
         Map<String, String> keyValuePairs = GitHubPRBuildPlugin.keyValuePairs(
                 JSONUtils.fromJSON(mockRequestBody(), GitHubPRBuildPlugin.REQUEST_BODY_TYPE), "scm-configuration");
@@ -400,15 +435,28 @@ public class GitHubPRBuildPluginTest {
     private void mockGitHelperToReturnBranch(GitFactory gitFactory, final String branch) {
         ExtendedGitCmdHelper helper = mock(ExtendedGitCmdHelper.class);
         when(gitFactory.create(any(GitConfig.class), any(File.class))).thenReturn(helper);
-        when(helper.getBranchToRevisionMap(anyString())).thenReturn(new HashMap<String, String>() {{
-            put(branch, "abcdef01234567891");
-        }});
+
+        Map<String, String> result = new HashMap<>();
+        result.put(branch, "abcdef01234567891");
+
+        when(helper.getBranchToRevisionMap(anyString())).thenReturn(result);
         when(helper.getLatestRevision()).thenReturn(
-                new Revision("abcdef01234567891", new Date(), "", "", "", Collections.<ModifiedFile>emptyList())
+                new Revision("abcdef01234567891", new Date(), "", "", "", Collections.emptyList())
         );
         when(helper.getDetailsForRevision("abcdef01234567891")).thenReturn(
-                new Revision("abcdef01234567891", new Date(), "", "", "", Collections.<ModifiedFile>emptyList())
+                new Revision("abcdef01234567891", new Date(), "", "", "", Collections.emptyList())
         );
+    }
+
+    private void mockGitRevisions(GitFactory gitFactory, Map<String, String> revisions) {
+        ExtendedGitCmdHelper helper = mock(ExtendedGitCmdHelper.class);
+        when(gitFactory.create(any(GitConfig.class), any(File.class))).thenReturn(helper);
+
+        when(helper.getBranchToRevisionMap(anyString())).thenReturn(revisions);
+
+        revisions.values().forEach(sha ->
+            when(helper.getDetailsForRevision(sha)).thenReturn(
+                    new Revision(sha, new Date(), "", "", "", Collections.emptyList())));
     }
 
     private void assertPRToRevisionMap(ArgumentCaptor<Map> prStatuses) {
