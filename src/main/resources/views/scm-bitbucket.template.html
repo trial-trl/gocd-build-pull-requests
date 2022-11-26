@@ -1,7 +1,17 @@
 <div class="form_item_block">
-    <label>URL:<span class="asterisk">*</span></label>
+    <label>Repository URL:<span class="asterisk">*</span></label>
     <input type="text" ng-model="url" ng-required="true"/>
     <span class="form_error" ng-show="GOINPUTNAME[url].$error.server">{{ GOINPUTNAME[url].$error.server }}</span>
+</div>
+<div class="form_item_block">
+    <label>Bitbucket Server URL:<span class="asterisk">*</span></label>
+    <input type="text" ng-model="apiUrl" ng-required="true"/>
+    <span class="form_error" ng-show="GOINPUTNAME[apiUrl].$error.server">{{ GOINPUTNAME[apiUrl].$error.server }}</span>
+</div>
+<div class="form_item_block">
+    <label>Project name:<span class="asterisk">*</span></label>
+    <input type="text" ng-model="projectName" ng-required="true"/>
+    <span class="form_error" ng-show="GOINPUTNAME[projectName].$error.server">{{ GOINPUTNAME[projectName].$error.server }}</span>
 </div>
 <div class="form_item_block">
     <label>Username:<span class="asterisk">*</span></label>

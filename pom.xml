@@ -26,6 +26,12 @@
             <version>1.4</version>
         </dependency>
         <dependency>
+            <groupId>com.cdancy</groupId>
+            <artifactId>bitbucket-rest</artifactId>
+            <version>2.6.2</version>
+            <classifier>all</classifier>
+        </dependency>
+        <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>2.3.1</version>
@@ -99,17 +105,25 @@
             <id>sonatype</id>
             <url>https://oss.sonatype.org/content/repositories/releases/</url>
         </repository>
+        <repository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>jcenter</id>
+            <name>bintray</name>
+            <url>https://jcenter.bintray.com</url>
+        </repository>
     </repositories>
 
     <profiles>
         <profile>
-            <id>github.pr</id>
+            <id>bitbucketprb.pr</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <plugin.name>github-pr-poller</plugin.name>
-                <resource.directory>src/main/resources/github</resource.directory>
+                <plugin.name>bitbucket-pr-poller</plugin.name>
+                <resource.directory>src/main/resources/bitbucket</resource.directory>
             </properties>
         </profile>
         <profile>
