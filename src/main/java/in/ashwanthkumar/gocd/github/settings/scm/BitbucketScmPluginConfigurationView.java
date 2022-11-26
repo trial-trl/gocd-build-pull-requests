@@ -1,17 +1,15 @@
-package com.eficode.gocd.bitbucket.settings.scm;
+package in.ashwanthkumar.gocd.github.settings.scm;
 
-import com.eficode.gocd.bitbucket.util.BranchFilter;
-import com.eficode.gocd.bitbucket.util.FieldFactory;
+import in.ashwanthkumar.gocd.github.util.BranchFilter;
+import in.ashwanthkumar.gocd.github.util.FieldFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class DefaultScmPluginConfigurationView implements ScmPluginConfigurationView {
-
-
+public class BitbucketScmPluginConfigurationView implements ScmPluginConfigurationView {
     @Override
     public String templateName() {
-        return "/views/scm.template.html";
+        return "/views/scm-bitbucket.template.html";
     }
 
     @Override
@@ -20,8 +18,10 @@ public class DefaultScmPluginConfigurationView implements ScmPluginConfiguration
         response.put("url", FieldFactory.createForScm("URL", null, true, true, false, "0"));
         response.put("username", FieldFactory.createForScm("Username", null, false, false, false, "1"));
         response.put("password", FieldFactory.createForScm("Password", null, false, false, true, "2"));
-        response.put("defaultBranch", FieldFactory.createForScm("Default Branch", "master", false, false, false, "3"));
-        response.put("shallowClone", FieldFactory.createForScm("Default Clone Behavior", "false", false, false, false, "4"));
+        response.put("apiUrl",  FieldFactory.createForScm("Bitbucket Server URL", null, false, true, false, "3"));
+        response.put("projectName",  FieldFactory.createForScm("Project name", null, false, true, false, "4"));
+        response.put("defaultBranch", FieldFactory.createForScm("Default Branch", "master", false, false, false, "5"));
+        response.put("shallowClone", FieldFactory.createForScm("Default Clone Behavior", "false", false, false, false, "6"));
         return response;
     }
 

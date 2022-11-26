@@ -1,4 +1,4 @@
-package com.eficode.gocd.bitbucket.provider.bitbucket;
+package in.ashwanthkumar.gocd.github.provider.bitbucket;
 
 import org.apache.commons.io.IOUtils;
 

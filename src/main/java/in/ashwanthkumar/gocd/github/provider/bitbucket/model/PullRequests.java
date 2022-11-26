@@ -1,4 +1,4 @@
-package com.eficode.gocd.bitbucket.provider.bitbucket.model;
+package in.ashwanthkumar.gocd.github.provider.bitbucket.model;
 
 import in.ashwanthkumar.utils.func.Function;
 import in.ashwanthkumar.utils.lang.option.Option;

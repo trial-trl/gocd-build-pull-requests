@@ -1,6 +1,6 @@
-package com.eficode.gocd.bitbucket.provider.bitbucket.model;
+package in.ashwanthkumar.gocd.github.provider.bitbucket.model;
 
-import com.eficode.gocd.bitbucket.provider.bitbucket.BitbucketProvider;
+import in.ashwanthkumar.gocd.github.provider.bitbucket.BitbucketProvider;
 
 public class PullRequestStatus {
     private int id;
