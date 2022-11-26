@@ -440,6 +440,7 @@ public class GitHubPRBuildPluginTest {
         result.put(branch, "abcdef01234567891");
 
         when(helper.getBranchToRevisionMap(anyString())).thenReturn(result);
+        when(helper.getBranchToRevisionMap()).thenReturn(result);
         when(helper.getLatestRevision()).thenReturn(
                 new Revision("abcdef01234567891", new Date(), "", "", "", Collections.emptyList())
         );
@@ -453,6 +454,7 @@ public class GitHubPRBuildPluginTest {
         when(gitFactory.create(any(GitConfig.class), any(File.class))).thenReturn(helper);
 
         when(helper.getBranchToRevisionMap(anyString())).thenReturn(revisions);
+        when(helper.getBranchToRevisionMap()).thenReturn(revisions);
 
         revisions.values().forEach(sha ->
             when(helper.getDetailsForRevision(sha)).thenReturn(

@@ -78,9 +78,9 @@ public class BranchFilterTest {
         BranchFilter filter = new BranchFilter(blacklist, whitelist);
 
         if (expect == Expect.PASS) {
-            assertTrue("PASS", filter.isBranchValid(branch));
+            assertTrue("PASS", filter.isBranchValid(branch, null));
         } else {
-            assertFalse("FAIL", filter.isBranchValid(branch));
+            assertFalse("FAIL", filter.isBranchValid(branch, null));
         }
     }
 
