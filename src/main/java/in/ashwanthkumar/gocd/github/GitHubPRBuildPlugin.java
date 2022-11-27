@@ -12,7 +12,6 @@ import com.tw.go.plugin.GitHelper;
 import com.tw.go.plugin.model.GitConfig;
 import com.tw.go.plugin.model.ModifiedFile;
 import com.tw.go.plugin.model.Revision;
-import com.tw.go.plugin.util.ListUtil;
 import com.tw.go.plugin.util.StringUtil;
 import in.ashwanthkumar.gocd.github.provider.Provider;
 import in.ashwanthkumar.gocd.github.settings.scm.PluginConfigurationView;
@@ -366,7 +365,8 @@ public class GitHubPRBuildPlugin implements GoPlugin {
 
     private Map<String, Object> populateRevisionMapForSHA(GitConfig gitConfig, String branch, Revision revision) {
         // patch for building merge commits
-        if (revision.isMergeCommit() && ListUtil.isEmpty(revision.getModifiedFiles())) {
+        List<ModifiedFile> modifiedFiles = revision.getModifiedFiles();
+        if (revision.isMergeCommit() && (modifiedFiles == null || modifiedFiles.isEmpty())) {
             revision.setModifiedFiles(Lists.of(new ModifiedFile("/dev/null", "deleted")));
         }
 
@@ -471,7 +471,8 @@ public class GitHubPRBuildPlugin implements GoPlugin {
         response.put("timestamp", new SimpleDateFormat(DATE_PATTERN).format(revision.getTimestamp()));
         response.put("revisionComment", revision.getComment());
         List<Map<String, String>> modifiedFilesMapList = new ArrayList<>();
-        if (!ListUtil.isEmpty(revision.getModifiedFiles())) {
+        List<ModifiedFile> modifiedFiles = revision.getModifiedFiles();
+        if (!(modifiedFiles == null || modifiedFiles.isEmpty())) {
             for (ModifiedFile modifiedFile : revision.getModifiedFiles()) {
                 Map<String, String> modifiedFileMap = new HashMap<>();
                 modifiedFileMap.put("fileName", modifiedFile.getFileName());

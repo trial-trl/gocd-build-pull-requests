@@ -64,13 +64,7 @@ These plugins require GoCD version v15.x or above.
 ### Github
 
 **Authentication:**
-- You can create a file `~/.github` with the following contents: (Note: `~/.github` needs to be available on Go Server)
-```
-login=johndoe
-password=thisaintapassword
-```
-
-- You can also generate & use oauth token. To do so create a file `~/.github` with the following contents: (Note: `~/.github` needs to be available on Go Server)
+- You can generate & use oauth token. To do so create a file `~/.github` with the following contents: (Note: `~/.github` needs to be available on Go Server)
 ```
 login=johndoe
 oauth=thisaintatoken

@@ -49,7 +49,7 @@ public class GitHubProvider implements Provider {
                 gitConfig.setUsername(props.getProperty("login"));
             }
             if (StringUtil.isEmpty(gitConfig.getPassword())) {
-                gitConfig.setPassword(props.getProperty("password"));
+                gitConfig.setPassword(props.getProperty("oauth"));
             }
         } catch (IOException e) {
             // ignore
@@ -148,7 +148,7 @@ public class GitHubProvider implements Provider {
 
     private GitHub loginWith(GitConfig gitConfig) throws IOException {
         if (hasCredentials(gitConfig))
-            return GitHub.connectUsingPassword(gitConfig.getUsername(), gitConfig.getPassword());
+            return GitHub.connect(gitConfig.getUsername(), gitConfig.getPassword());
         else return GitHub.connect();
     }
 

@@ -42,7 +42,7 @@ public class GitHubPRBuildPluginTest {
     public static File propertyFile;
     public static boolean propertyFileExisted = false;
     public static String usernameProperty;
-    public static String passwordProperty;
+    public static String oauthProperty;
 
     @Before
     public void setUp() throws Exception {
@@ -52,11 +52,11 @@ public class GitHubPRBuildPluginTest {
             propertyFileExisted = true;
             Properties props = GHUtils.readPropertyFile();
             usernameProperty = props.getProperty("login");
-            passwordProperty = props.getProperty("password");
+            oauthProperty = props.getProperty("oauth");
         } else {
             usernameProperty = "props-username";
-            passwordProperty = "props-password";
-            FileUtils.writeStringToFile(propertyFile, "login=" + usernameProperty + "\npassword=" + passwordProperty);
+            oauthProperty = "props-password";
+            FileUtils.writeStringToFile(propertyFile, "login=" + usernameProperty + "\noauth=" + oauthProperty);
         }
     }
 
@@ -93,7 +93,7 @@ public class GitHubPRBuildPluginTest {
 
         assertThat(gitConfig.getUrl(), is("url"));
         assertThat(gitConfig.getUsername(), is(usernameProperty));
-        assertThat(gitConfig.getPassword(), is(passwordProperty));
+        assertThat(gitConfig.getPassword(), is(oauthProperty));
         assertThat(gitConfig.isShallowClone(), is(false));
     }
 
