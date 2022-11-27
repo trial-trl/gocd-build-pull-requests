@@ -93,6 +93,8 @@ public class BranchMatcherTest {
                         invalid("efizz", "buzze", "cfizz", "buzzb"),
                         valid("fizz", "buzz", "afizz", "dfizz", "buzza", "buzzd"),
                         BranchMatcher.Mode.FAIL_EMPTY},
+                {branches("release/*.*.*"), valid("release/1.5.0"),
+                        invalid("feature/nm-test-branch", "release/1.0"),BranchMatcher.Mode.FAIL_EMPTY}
         });
     }
 

@@ -7,7 +7,7 @@ import in.ashwanthkumar.gocd.github.provider.Provider;
 import in.ashwanthkumar.gocd.github.provider.github.model.PullRequestStatus;
 import in.ashwanthkumar.gocd.github.settings.general.DefaultGeneralPluginConfigurationView;
 import in.ashwanthkumar.gocd.github.settings.general.GeneralPluginConfigurationView;
-import in.ashwanthkumar.gocd.github.settings.scm.DefaultScmPluginConfigurationView;
+import in.ashwanthkumar.gocd.github.settings.scm.GithubScmPluginConfigurationView;
 import in.ashwanthkumar.gocd.github.settings.scm.ScmPluginConfigurationView;
 import in.ashwanthkumar.gocd.github.util.URLUtils;
 import in.ashwanthkumar.utils.func.Function;
@@ -104,7 +104,7 @@ public class GitHubProvider implements Provider {
 
     @Override
     public ScmPluginConfigurationView getScmConfigurationView() {
-        return new DefaultScmPluginConfigurationView();
+        return new GithubScmPluginConfigurationView();
     }
 
     @Override

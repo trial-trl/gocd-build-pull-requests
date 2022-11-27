@@ -3,8 +3,8 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>in.ashwanthkumar</groupId>
-    <artifactId>gocd-github-pr-material</artifactId>
+    <groupId>com.trial.gocd</groupId>
+    <artifactId>gocd-pr-material</artifactId>
     <version>1.6.0</version>
 
     <properties>
@@ -23,7 +23,12 @@
         <dependency>
             <groupId>in.ashwanthkumar</groupId>
             <artifactId>git-cmd</artifactId>
-            <version>1.4</version>
+            <version>1.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-collections4</artifactId>
+            <version>4.2</version>
         </dependency>
         <dependency>
             <groupId>com.cdancy</groupId>
@@ -170,7 +175,7 @@
     </profiles>
 
     <build>
-        <finalName>${plugin.name}-${version}</finalName>
+        <finalName>${plugin.name}-${project.version}</finalName>
         <resources>
             <resource>
                 <directory>src/main/resources/views</directory>
@@ -205,7 +210,22 @@
                     </archive>
                 </configuration>
             </plugin>
-
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
