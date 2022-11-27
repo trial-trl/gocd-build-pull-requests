@@ -15,7 +15,7 @@ public class GitHubProviderTest extends AbstractProviderTest {
     public void shouldReturnCorrectScmSettingsTemplate() throws Exception {
         PluginConfigurationView scmConfigurationView = getScmView();
 
-        assertThat(scmConfigurationView.templateName(), is("/views/scm.template.html"));;
+        assertThat(scmConfigurationView.templateName(), is("/views/scm.template.branch.filter.html"));;
     }
 
     @Test

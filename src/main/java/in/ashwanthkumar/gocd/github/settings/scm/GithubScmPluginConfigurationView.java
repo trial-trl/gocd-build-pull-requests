@@ -11,6 +11,11 @@ public class GithubScmPluginConfigurationView extends DefaultScmPluginConfigurat
     public static final String BRANCH_WHITELIST_PROPERTY_NAME = "branchwhitelist";
 
     @Override
+    public String templateName() {
+        return "/views/scm.template.branch.filter.html";
+    }
+
+    @Override
     public Map<String, Object> fields() {
         Map<String, Object> fields = super.fields();
         fields.put(BRANCH_WHITELIST_PROPERTY_NAME,
