@@ -38,7 +38,7 @@ import static java.util.stream.Collectors.joining;
 
 @Extension
 public class GitHubPRBuildPlugin implements GoPlugin {
-    private static final Logger LOGGER = Logger.getLoggerFor(GitHubPRBuildPlugin.class);
+    private static Logger LOGGER = Logger.getLoggerFor(GitHubPRBuildPlugin.class);
 
     public static final String EXTENSION_NAME = "scm";
     private static final List<String> goSupportedVersions = singletonList("1.0");
@@ -80,6 +80,7 @@ public class GitHubPRBuildPlugin implements GoPlugin {
             Class<?> providerClass = Class.forName(properties.getProperty("provider"));
             Constructor<?> constructor = providerClass.getConstructor();
             provider = (Provider) constructor.newInstance();
+            LOGGER.info("init(): Using provider " + provider.getName());
             gitFactory = new GitFactory();
             gitFolderFactory = new GitFolderFactory();
         } catch (Exception e) {
@@ -197,6 +198,7 @@ public class GitHubPRBuildPlugin implements GoPlugin {
 
         Map<String, Object> response = new HashMap<>();
         List<String> messages = new ArrayList<>();
+        LOGGER.info("RequestBody: " + goPluginApiRequest.requestBody());
 
         checkConnection(gitConfig, response, messages);
 
@@ -432,7 +434,9 @@ public class GitHubPRBuildPlugin implements GoPlugin {
                 StringUtils.trimToNull(configuration.get("defaultBranch")),
                 true,
                 Boolean.parseBoolean(configuration.get("shallowClone")));
+        provider.setApiUrl(configuration.get("apiUrl"));
         provider.addConfigData(gitConfig);
+        provider.setProjectName(configuration.get("projectName"));
         return gitConfig;
     }
 
@@ -507,10 +511,13 @@ public class GitHubPRBuildPlugin implements GoPlugin {
     }
 
     public void checkConnection(GitConfig gitConfig, Map<String, Object> response, List<String> messages) {
+        LOGGER.info("checkConnection()");
         if (StringUtil.isEmpty(gitConfig.getUrl())) {
+            LOGGER.info("checkConnection(): is empty");
             response.put("status", "failure");
             messages.add("URL is empty");
         } else if (!provider.isValidURL(gitConfig.getUrl())) {
+            LOGGER.info("checkConnection(): is invalid");
             response.put("status", "failure");
             messages.add("Invalid URL");
         } else {
