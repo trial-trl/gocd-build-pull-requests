@@ -117,7 +117,17 @@
 
     <profiles>
         <profile>
-            <id>bitbucketprb.pr</id>
+            <id>github.pr</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <plugin.name>github-pr-poller</plugin.name>
+                <resource.directory>src/main/resources/github</resource.directory>
+            </properties>
+        </profile>
+        <profile>
+            <id>bitbucket.pr</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>

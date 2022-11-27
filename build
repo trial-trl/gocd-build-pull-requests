@@ -1,0 +1,8 @@
+#!/bin/sh
+
+sh ./mvnw package -P git.fb
+sh ./mvnw package -P github.pr
+sh ./mvnw package -P bitbucket.pr
+sh ./mvnw package -P gitlab.pr
+sh ./mvnw package -P stash.pr
+sh ./mvnw package -P gerrit.cs

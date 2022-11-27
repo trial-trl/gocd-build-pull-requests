@@ -6,6 +6,7 @@ This is a GoCD SCM plugin for Git feature branch support. [Discussion Thread](ht
 Supported (as separate plugins):
 * Git repository for branches
 * Github repository for Pull Requests
+* Bitbucket repository for Pull Requests (WIP)
 * Gitlab repository for Merge Requests
 * Stash repository for Pull Requests
 * Gerrit repository for Change Sets
@@ -176,7 +177,7 @@ Build a specific variant:
 ./mvnw package -P <variant>
 ```
 
-Where `<variant>` is one of: `github.pr, gitlab.pr, git.fb, stash.pr, gerrit.cs`.
+Where `<variant>` is one of: `github.pr, bitbucket.pr, gitlab.pr, git.fb, stash.pr, gerrit.cs`.
 
 ### CI
 
