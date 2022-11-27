@@ -16,8 +16,10 @@ import com.tw.go.plugin.model.GitConfig;
 import com.tw.go.plugin.util.StringUtil;
 import in.ashwanthkumar.utils.func.Function;
 import com.thoughtworks.go.plugin.api.logging.Logger;
+import org.apache.commons.codec.binary.Base64;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Properties;
@@ -102,9 +104,14 @@ public class BitbucketProvider implements Provider {
         boolean isDisabled = System.getProperty("go.plugin.bitbucket.pr.populate-details", "Y").equals("N");
         LOG.debug("Populating PR details is disabled");
         LOG.info("Fetching newest PR");
+        
+        String auth = String.format("%s:%s", gitConfig.getUsername(), gitConfig.getPassword());
+        byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(Charset.forName("ISO-8859-1")));
+        String authHeader = String.format("%s", new String(encodedAuth));
+
         BitbucketClient client = BitbucketClient.builder()
                 .endPoint(this.bitbucketUrl)
-                .credentials(gitConfig.getUsername() + ":" + gitConfig.getPassword())
+                .credentials(authHeader)
                 .build();
         PullRequestApi api = client.api().pullRequestApi();
         PullRequestPage page = api.list(this.projectName, parseRepository(gitConfig.getUrl()),
