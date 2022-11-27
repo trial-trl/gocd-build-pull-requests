@@ -1,16 +1,16 @@
-package com.eficode.gocd.bitbucket.provider.bitbucket;
+package in.ashwanthkumar.gocd.github.provider.bitbucket;
 
 import com.cdancy.bitbucket.rest.BitbucketClient;
 import com.cdancy.bitbucket.rest.domain.pullrequest.PullRequest;
 import com.cdancy.bitbucket.rest.domain.pullrequest.PullRequestPage;
 import com.cdancy.bitbucket.rest.features.PullRequestApi;
-import com.eficode.gocd.bitbucket.provider.Provider;
-import com.eficode.gocd.bitbucket.provider.bitbucket.model.PullRequestStatus;
-import com.eficode.gocd.bitbucket.settings.general.DefaultGeneralPluginConfigurationView;
-import com.eficode.gocd.bitbucket.settings.general.GeneralPluginConfigurationView;
-import com.eficode.gocd.bitbucket.settings.scm.BitbucketScmPluginConfigurationView;
-import com.eficode.gocd.bitbucket.settings.scm.ScmPluginConfigurationView;
-import com.eficode.gocd.bitbucket.util.URLUtils;
+import in.ashwanthkumar.gocd.github.provider.Provider;
+import in.ashwanthkumar.gocd.github.provider.bitbucket.model.PullRequestStatus;
+import in.ashwanthkumar.gocd.github.settings.general.DefaultGeneralPluginConfigurationView;
+import in.ashwanthkumar.gocd.github.settings.general.GeneralPluginConfigurationView;
+import in.ashwanthkumar.gocd.github.settings.scm.BitbucketScmPluginConfigurationView;
+import in.ashwanthkumar.gocd.github.settings.scm.ScmPluginConfigurationView;
+import in.ashwanthkumar.gocd.github.util.URLUtils;
 import com.thoughtworks.go.plugin.api.GoPluginIdentifier;
 import com.tw.go.plugin.model.GitConfig;
 import com.tw.go.plugin.util.StringUtil;
@@ -32,12 +32,10 @@ public class BitbucketProvider implements Provider {
     private String bitbucketUrl;
     private String projectName;
 
-    @Override
     public void setApiUrl(String url){
         this.bitbucketUrl = url;
     }
 
-    @Override
     public void setProjectName(String name) { this.projectName = name; }
 
     @Override

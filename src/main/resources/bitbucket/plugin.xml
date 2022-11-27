@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<go-plugin id="bitbucketprb.pr" version="1">
+<go-plugin id="bitbucket.pr" version="1">
     <about>
         <name>Bitbucket Pull Requests Builder</name>
         <version>${project.version}</version>

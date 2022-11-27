@@ -1,4 +1,4 @@
-package com.eficode.gocd.bitbucket;
+package in.ashwanthkumar.gocd.github;
 
 import com.google.gson.reflect.TypeToken;
 import com.thoughtworks.go.plugin.api.GoApplicationAccessor;
@@ -14,13 +14,13 @@ import com.tw.go.plugin.model.ModifiedFile;
 import com.tw.go.plugin.model.Revision;
 import com.tw.go.plugin.util.ListUtil;
 import com.tw.go.plugin.util.StringUtil;
-import com.eficode.gocd.bitbucket.provider.Provider;
-import com.eficode.gocd.bitbucket.settings.scm.PluginConfigurationView;
-import com.eficode.gocd.bitbucket.util.BranchFilter;
+import in.ashwanthkumar.gocd.github.provider.Provider;
+import in.ashwanthkumar.gocd.github.settings.scm.PluginConfigurationView;
+import in.ashwanthkumar.gocd.github.util.BranchFilter;
 import in.ashwanthkumar.gocd.github.util.ExtendedGitCmdHelper;
-import com.eficode.gocd.bitbucket.util.GitFactory;
-import com.eficode.gocd.bitbucket.util.GitFolderFactory;
-import com.eficode.gocd.bitbucket.util.JSONUtils;
+import in.ashwanthkumar.gocd.github.util.GitFactory;
+import in.ashwanthkumar.gocd.github.util.GitFolderFactory;
+import in.ashwanthkumar.gocd.github.util.JSONUtils;
 import in.ashwanthkumar.utils.collections.Lists;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;

@@ -65,4 +65,16 @@ public class GerritProvider implements Provider {
     public GeneralPluginConfigurationView getGeneralConfigurationView() {
         return new DefaultGeneralPluginConfigurationView();
     }
+
+    @Override
+    public void setApiUrl(String url) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void setProjectName(String name) {
+        // TODO Auto-generated method stub
+        
+    }
 }
